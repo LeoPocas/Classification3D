@@ -2,10 +2,15 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.keras
+*.h5
+*.png
+*.jpg
+ACDC/ 
+
 
 # C extensions
 *.so
-
 # Distribution / packaging
 .Python
 build/
