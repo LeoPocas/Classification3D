@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import nibabel as nib
-from roiExtraction import get_ROI_distance_transform
+from preprocessing.roiExtraction import get_ROI_distance_transform
 
 dataset_path = './ACDC/database/training/'
 LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}

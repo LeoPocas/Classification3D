@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
-from cnn3d_sep import cnn_3d_model, build_med3d
-from load_data import load_4d_and_extract_3d_volumes, load_4d_roi_sep
+from Classification3D.models.classification.cnn3d_sep import cnn_3d_model, build_med3d
+from Classification3D.preprocessing.load_data import load_4d_and_extract_3d_volumes, load_4d_roi_sep
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam
@@ -9,7 +9,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow.keras import mixed_precision
 mixed_precision.set_global_policy('float32')
 
-LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
+from ...utils import LABEL_MAPPING, ACDC_TRAINING_PATH, ACDC_TESTING_PATH, WEIGHT_PATH
 
 # Configuração da GPU (opcional)
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -67,8 +67,8 @@ print(f"Imagens: {images.shape}, Labels: {labels.shape}")
 # Dividir os dados após o augmentation
 x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=33)
 
-model = cnn_3d_model()
-#model = build_med3d()
+#model = cnn_3d_model()
+model = build_med3d()
 
 # Compilar o modelo
 optimizer = Adam(learning_rate=0.01)
@@ -76,7 +76,7 @@ model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accu
 
 # Configurar os callbacks
 callbacks = [
-    ModelCheckpoint("./weights/med3d_4d_roi.weights.keras", save_best_only=True, monitor="val_loss"),
+    ModelCheckpoint(WEIGHT_PATH + "/med3d_4d_roi.weights.keras", save_best_only=True, monitor="val_loss"),
     ReduceLROnPlateau(monitor='val_loss', factor=0.25, patience=5, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=20)
 ]
@@ -85,11 +85,11 @@ callbacks = [
 history = model.fit(
     x_train, y_train,
     validation_data=(x_val, y_val),
-    epochs=10, batch_size=20,
+    epochs=25, batch_size=20,
     callbacks=callbacks,
     verbose=2
 )
 
-test_images, test_masks = load_4d_roi_sep('./ACDC/database/testing/')
+test_images, test_masks = load_4d_roi_sep(ACDC_TESTING_PATH)
 results = model.evaluate(test_images, test_masks, verbose=1)
 print(results)

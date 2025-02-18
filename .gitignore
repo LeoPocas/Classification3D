@@ -7,7 +7,8 @@ __pycache__/
 *.png
 *.jpg
 ACDC/ 
-
+acdc.py
+teste.py
 
 # C extensions
 *.so

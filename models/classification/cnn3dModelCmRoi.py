@@ -5,9 +5,7 @@ from scipy.spatial.distance import directed_hausdorff
 from scipy.ndimage import zoom
 from keras.utils import to_categorical
 
-LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
-NUM_CLASSES = 5
-TARGET_SHAPE = (96, 96, 16)  # Dimensão final padronizada para o modelo
+from ...utils import TARGET_SHAPE, NUM_CLASSES, LABEL_MAPPING
 
 # Variáveis para armazenar as dimensões máximas das máscaras
 max_dims = [0, 0, 0]

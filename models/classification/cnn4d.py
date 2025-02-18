@@ -7,11 +7,8 @@ from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
-LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
-TARGET_SHAPE = (128, 128, 16)
-MAX_TIME_DIM = 16  # Limite máximo para a dimensão do tempo
-NUM_CLASSES = 5
-dataset_path = './ACDC/database/training/'
+
+from ...utils import TARGET_SHAPE, NUM_CLASSES, LABEL_MAPPING, MAX_TIME_DIM, ACDC_TRAINING_PATH
 
 
 class ResidualBlock3D(Layer):

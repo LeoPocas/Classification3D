@@ -1,19 +1,12 @@
-import os
 import numpy as np
-import nibabel as nib
-from keras.utils import to_categorical
 from keras.layers import Input, Conv3D, GlobalAveragePooling3D, GlobalMaxPooling3D, Dense, MaxPooling3D, BatchNormalization, Dropout, add, concatenate, LeakyReLU, Reshape, Multiply, ReLU
 from keras.models import Model
-from keras.regularizers import l2, l1
-from keras.optimizers import Adam
+from keras.regularizers import l2
 from keras.activations import relu
 from scipy.ndimage import zoom
 import tensorflow as tf
 
-LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
-TARGET_SHAPE = (96, 96, 12)
-NUM_CLASSES = 5
-dataset_path = './ACDC/database/training/'
+from ...utils import TARGET_SHAPE, NUM_CLASSES
 
 def resize_volume(volume, target_shape):
     scale_factors = [target_dim / input_dim for target_dim, input_dim in zip(target_shape, volume.shape)]

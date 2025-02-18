@@ -6,12 +6,7 @@ from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow.keras import mixed_precision
 from cnn4d import build_med3d_lstm, load_acdc_data_4d
-
-# Definições
-LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
-TARGET_SHAPE = (128, 128, 16)
-NUM_CLASSES = 5
-dataset_path = './ACDC/database/training/'
+from ...utils import TARGET_SHAPE, NUM_CLASSES, LABEL_MAPPING, MAX_TIME_DIM, ACDC_TRAINING_PATH, ACDC_TESTING_PATH
 
 mixed_precision.set_global_policy('float32')
 
@@ -77,7 +72,7 @@ model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accu
 
 # Configurar os callbacks
 callbacks = [
-    ModelCheckpoint("./weights/med4d_ltsm.weights.keras", save_best_only=True, monitor="val_loss"),
+    ModelCheckpoint("../../weights/med4d_ltsm.weights.keras", save_best_only=True, monitor="val_loss"),
     ReduceLROnPlateau(monitor='val_loss', factor=0.25, patience=5, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=2)
 ]
@@ -91,7 +86,7 @@ history = model.fit(
     verbose=2
 )
 
-test_images, test_masks = load_acdc_data_4d('./ACDC/database/testing/')
+test_images, test_masks = load_acdc_data_4d(ACDC_TESTING_PATH)
 results = model.evaluate(test_images, test_masks, verbose=1)
 print(results)
     
