@@ -1,6 +1,6 @@
 import numpy as np
 from matplotlib import pyplot as plt
-from preprocessing.roiExtraction import get_ROI_distance_transform
+from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 import nibabel as nib
 from preprocessing.load_data import load_4d_roi_sep
 from utils import OUTPUT_PATH
@@ -16,7 +16,7 @@ img4D = np.transpose(img4D,[3,2,0,1])
 
 print(f"img shape corrected: {img4D.shape}")
 
-rect1,rect2 = get_ROI_distance_transform(img4D,voxel_size)
+rect1,rect2 = get_ROI_distance_transform(img4D,voxel_size, 1.4)
 
 img4D_ROI = img4D[:,:,rect1[0]:rect2[0],rect1[1]:rect2[1]]
 
@@ -56,7 +56,7 @@ plt.figure(figsize=(10, 5))
 plt.imshow(volumes[volume_index, :, :, slice_index, 0], cmap='gray')
 plt.title(f"Volume {volume_index}, Slice {slice_index}")
 plt.axis('off')
-plt.savefig(OUTPUT_PATH + "/new2.1x1.png")
+plt.savefig(OUTPUT_PATH + "/new.png")
 plt.show()
 
 volume_index = 0  # Escolha o volume que deseja visualizar

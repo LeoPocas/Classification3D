@@ -4,9 +4,9 @@ import os
 from keras.utils import to_categorical
 from preprocessing.roiExtraction import get_ROI_distance_transform
 from preprocessing.equalizacao import *
-from Classification3D.utils import LABEL_MAPPING, TARGET_SHAPE, ACDC_TESTING_PATH, NUM_CLASSES, MAX_TIME_DIM
+from Classification3D.utils import LABEL_MAPPING, TARGET_SHAPE, ACDC_TRAINING_PATH, NUM_CLASSES, MAX_TIME_DIM
 
-def load_4d_and_extract_3d_volumes(data_dir=ACDC_TESTING_PATH, label_mapping=LABEL_MAPPING, apply_padding_cropping=True, target_shape=TARGET_SHAPE):
+def load_4d_and_extract_3d_volumes(data_dir=ACDC_TRAINING_PATH, label_mapping=LABEL_MAPPING, apply_padding_cropping=True, target_shape=TARGET_SHAPE):
     volumes = []
     labels = []
 
@@ -45,7 +45,7 @@ def load_4d_and_extract_3d_volumes(data_dir=ACDC_TESTING_PATH, label_mapping=LAB
     labels = to_categorical(np.array(labels), num_classes=NUM_CLASSES)
     return images, labels
 
-def load_acdc_data_3d(data_path=ACDC_TESTING_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING, num_classes=NUM_CLASSES):
+def load_acdc_data_3d(data_path=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING, num_classes=NUM_CLASSES):
     images, labels = [], []
     patients = os.listdir(data_path)
 
@@ -75,7 +75,7 @@ def load_acdc_data_3d(data_path=ACDC_TESTING_PATH, target_shape=TARGET_SHAPE, la
     labels = to_categorical(np.array(labels), num_classes=NUM_CLASSES)
     return images, labels
 
-def load_acdc_data_4d(data_path=ACDC_TESTING_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING, num_classes=NUM_CLASSES):
+def load_acdc_data_4d(data_path=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING, num_classes=NUM_CLASSES):
     images, labels = [], []
     patients = os.listdir(data_path)
 
@@ -120,7 +120,7 @@ def load_acdc_data_4d(data_path=ACDC_TESTING_PATH, target_shape=TARGET_SHAPE, la
 
     return np.array(images), np.array(labels)
 
-def load_4d_roi_sep(data_dir=ACDC_TESTING_PATH, target_shape=TARGET_SHAPE, label_mapping = LABEL_MAPPING, voxel_size=None, zoom_factor=1.2):
+def load_4d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, label_mapping = LABEL_MAPPING, voxel_size=None, zoom_factor=1.4):
     volumes = []
     labels = []
 

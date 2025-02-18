@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-def apply_clahe(volume, clip_limit=0.2, tile_grid_size=(1, 1)):
+def apply_clahe(volume, clip_limit=3, tile_grid_size=(6, 6)):
     # Aplica CLAHE em cada slice do volume
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     enhanced_slices = []

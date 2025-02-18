@@ -7,5 +7,5 @@ MAX_TIME_DIM = 16
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ACDC_TRAINING_PATH = os.path.join(BASE_DIR, './ACDC/database/training/')
 ACDC_TESTING_PATH = os.path.join(BASE_DIR, './ACDC/database/testing/')
-OUTPUT_PATH = os.path.join(BASE_DIR, './output')
-WEIGHT_PATH = os.path.join(BASE_DIR, './weight')
+OUTPUT_PATH = os.path.join(BASE_DIR, './output/')
+WEIGHT_PATH = os.path.join(BASE_DIR, './weights/')

@@ -7,6 +7,7 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from tensorflow.keras import mixed_precision
+from Classification3D.models.loss import combined_loss
 mixed_precision.set_global_policy('float32')
 
 from ...utils import LABEL_MAPPING, ACDC_TRAINING_PATH, ACDC_TESTING_PATH, WEIGHT_PATH
@@ -40,22 +41,6 @@ class ConfusionMatrixCallback(tf.keras.callbacks.Callback):
         cr = classification_report(y_true, y_pred_classes, target_names=list(LABEL_MAPPING.keys()))
         print(f"\nRelatório de Classificação após época {epoch+1}:\n", cr)
 
-def combined_loss(alpha=0.5):
-    def loss_fn(y_true, y_pred):
-        focal = focal_loss(gamma=2., alpha=0.25)(y_true, y_pred)
-        dice = 1 - tf.reduce_mean((2 * y_true * y_pred + 1e-7) / (y_true + y_pred + 1e-7))
-        return alpha * focal + (1 - alpha) * dice
-    return loss_fn
-
-def focal_loss(gamma=2.0, alpha=0.25):
-    def focal_loss_fixed(y_true, y_pred):
-        epsilon = tf.keras.backend.epsilon()
-        y_pred = tf.clip_by_value(y_pred, epsilon, 1 - epsilon)
-        focal_weight = alpha * tf.pow(1 - y_pred, gamma)
-        loss = -focal_weight * y_true * tf.math.log(y_pred)
-        return tf.reduce_sum(loss, axis=-1)
-    return focal_loss_fixed
-
 # Carregar os dados
 images, labels = load_4d_roi_sep()
 
@@ -76,7 +61,7 @@ model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accu
 
 # Configurar os callbacks
 callbacks = [
-    ModelCheckpoint(WEIGHT_PATH + "/med3d_4d_roi.weights.keras", save_best_only=True, monitor="val_loss"),
+    ModelCheckpoint(WEIGHT_PATH + "med3d_4d_roi.weights.keras", save_best_only=False, monitor="val_loss"),
     ReduceLROnPlateau(monitor='val_loss', factor=0.25, patience=5, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=20)
 ]
@@ -85,7 +70,7 @@ callbacks = [
 history = model.fit(
     x_train, y_train,
     validation_data=(x_val, y_val),
-    epochs=25, batch_size=20,
+    epochs=35, batch_size=20,
     callbacks=callbacks,
     verbose=2
 )

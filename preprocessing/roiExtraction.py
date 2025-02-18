@@ -53,7 +53,7 @@ def get_bounding_box2(img_shape,center,voxel_size,zoom_factor):
     cmax = center+radius
     return cmin.astype(np.int16),cmax.astype(np.int16)
 
-def get_ROI_distance_transform(img4D,voxel_size, zoom_factor=1):
+def get_ROI_distance_transform(img4D,voxel_size, zoom_factor):
     sub,bin_img2 = get_binary_mask(img4D,voxel_size)
     bin_img2 = binary_dilation(bin_img2,np.array([[0,1,0],[1,1,1],[0,1,0]]),iterations=int(10/voxel_size[0]))
     distance_matrix = binary_fill_holes(bin_img2)
