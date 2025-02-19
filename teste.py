@@ -30,25 +30,25 @@ f, axarr = plt.subplots(1,2)
 axarr[0].imshow(img4D[1,1],cmap="gray")
 axarr[1].imshow(img4D_ROI[:,:,1,1],cmap="gray")
 
-plt.savefig("algo.jpg")
+plt.savefig(OUTPUT_PATH + "algo.jpg")
 
 volumes, label = load_4d_roi_sep()
 
 # Verificar o shape do primeiro volume
-print(f"Shape do primeiro volume: {volumes[0].shape}")
+print(f"Shape do primeiro volume: {volumes[56].shape}")
 
 # Selecionar uma fatia específica do volume para visualização
 # Aqui, escolhemos a primeira profundidade e a primeira fatia de tempo
-fatia_altura_largura = volumes[0, :, :, 1, 0]  # Shape será (128, 128) após selecionar as fatias específicas
+fatia_altura_largura = volumes[56, :, :, 1, 0]  # Shape será (128, 128) após selecionar as fatias específicas
 
 # Exibir a fatia selecionada
 plt.imshow(fatia_altura_largura, cmap="gray")
 plt.title("Fatia do Volume")
 plt.colorbar()
-plt.savefig("volume_slice.png")
+plt.savefig(OUTPUT_PATH + "volume_slice.png")
 plt.show()
 
-volume_index = 0  
+volume_index = 56  
 slice_index = volumes.shape[3] // 2  # Fatia central
 
 # Plotagem da imagem do volume

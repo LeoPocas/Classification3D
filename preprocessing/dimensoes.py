@@ -3,15 +3,14 @@ import numpy as np
 import nibabel as nib
 from preprocessing.roiExtraction import get_ROI_distance_transform
 from Classification3D.utils import OUTPUT_PATH
-dataset_path = './ACDC/database/training/'
-LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
+from Classification3D.utils import *
 
 def save_roi_dimensions(roi_dimensions, filenames, output_path):
     with open(output_path, 'w') as f:
         for dimensions, filename in zip(roi_dimensions, filenames):
             f.write(f"{dimensions} patient {filename}\n")
 
-def load_4d_and_extract_3d_volumes(data_dir, label_mapping, apply_padding_cropping=True, target_shape=None, voxel_size=None, zoom_factor=1.4, output_path=OUTPUT_PATH + 'roi_dimensions.txt'):
+def load_4d_and_extract_3d_volumes(data_dir, label_mapping, apply_padding_cropping=True, target_shape=None, voxel_size=None, zoom_factor=ZOOM, output_path=OUTPUT_PATH + 'roi_dimensions.txt'):
     volumes = []
     labels = []
     roi_dimensions = []
@@ -53,4 +52,4 @@ def load_4d_and_extract_3d_volumes(data_dir, label_mapping, apply_padding_croppi
 
     return volumes, labels
 
-load_4d_and_extract_3d_volumes(dataset_path, LABEL_MAPPING)
+load_4d_and_extract_3d_volumes(ACDC_TRAINING_PATH, LABEL_MAPPING)

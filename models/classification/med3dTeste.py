@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
-from Classification3D.models.classification.cnn3d_sep import build_med3d
+from Classification3D.models.classification.med3d import build_med3d
 from Classification3D.utils import *
 from Classification3D.models.loss import combined_loss
 from Classification3D.preprocessing.load_data import load_4d_roi_sep

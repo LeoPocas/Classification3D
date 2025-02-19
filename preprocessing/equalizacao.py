@@ -1,7 +1,8 @@
 import cv2
 import numpy as np
+from Classification3D.utils import CLIP, GRID
 
-def apply_clahe(volume, clip_limit=3, tile_grid_size=(6, 6)):
+def apply_clahe(volume, clip_limit=CLIP, tile_grid_size=GRID):
     # Aplica CLAHE em cada slice do volume
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
     enhanced_slices = []

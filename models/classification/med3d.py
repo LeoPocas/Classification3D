@@ -100,7 +100,7 @@ def residual_block_3d(input_tensor, filters, kernel_size=3):
 
     x = add([x, shortcut])
     x = ReLU()(x)
-    x = Dropout(0.1)(x)
+    #x = Dropout(0.1)(x)
     return x
 
 def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
@@ -109,14 +109,14 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # Initial Convolution
     x = Conv3D(64, kernel_size=7, strides=2, padding='same', activation='relu')(inputs)
     x = BatchNormalization()(x)
-    x = MaxPooling3D(pool_size=3, strides=2, padding='same')(x)
+    x = MaxPooling3D(pool_size=2, strides=2, padding='same')(x)
 
     # Residual Blocks
     x = residual_block_3d(x, 64)
     x = residual_block_3d(x, 128)
     x = residual_block_3d(x, 256)
     x = residual_block_3d(x, 512)
-    x = residual_block_3d(x, 1024)
+    #x = residual_block_3d(x, 1024)
 
     # Global Average Pooling
     x = GlobalAveragePooling3D()(x)
@@ -124,8 +124,6 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # Fully Connected Layers
     x = Dense(256, activation='relu')(x)
     x = Dropout(0.5)(x)
-    x = Dense(64, activation='relu')(x)
-    x = Dropout(0.3)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
 
     model = Model(inputs, outputs)
