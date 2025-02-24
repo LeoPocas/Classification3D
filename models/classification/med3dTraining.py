@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-from Classification3D.models.classification.med3d import cnn_3d_model, build_med3d
+from Classification3D.models.classification.med3d import cnn_3d_model, build_med3d, newModel
 from Classification3D.preprocessing.load_data import load_4d_and_extract_3d_volumes, load_4d_roi_sep, load_3d_roi_sep
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
@@ -50,19 +50,19 @@ images, labels = load_3d_roi_sep()
 print(f"Imagens: {images.shape}, Labels: {labels.shape}")
 
 # Dividir os dados após o augmentation
-x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.15, random_state=1)
-
+# x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=35)
+x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.1, random_state=42)
 #model = cnn_3d_model()
 model = build_med3d()
-
+# model = newModel()
 # Compilar o modelo
-optimizer = Adam(learning_rate=0.1)
+optimizer = Adam(learning_rate=0.003)
 model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accuracy'])
 
 # Configurar os callbacks
 callbacks = [
-    ModelCheckpoint(WEIGHT_PATH + "med3d_4d_roi.weights.keras", save_best_only=False, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.25, patience=6, min_lr=1e-6),
+    ModelCheckpoint(WEIGHT_PATH + "med3d_4d_roi_clahe.weights.keras", save_best_only=False, monitor="val_loss"),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=6, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=50)
 ]
 
@@ -70,7 +70,7 @@ callbacks = [
 history = model.fit(
     x_train, y_train,
     validation_data=(x_val, y_val),
-    epochs=80, batch_size=50,
+    epochs=150, batch_size=50,
     callbacks=callbacks,
     verbose=2
 )

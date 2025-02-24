@@ -1,7 +1,8 @@
 import numpy as np
-from keras.layers import Input, Conv3D, GlobalAveragePooling3D, GlobalMaxPooling3D, Dense, MaxPooling3D, BatchNormalization, Dropout, add, concatenate, LeakyReLU, Reshape, Multiply, ReLU
-from keras.models import Model
+from keras.layers import Input, Conv3D, GlobalAveragePooling3D, GlobalMaxPooling3D, Dense, MaxPooling3D, BatchNormalization, Dropout, add, concatenate, LeakyReLU, Reshape, Multiply, ReLU, Flatten
+from keras.models import Model, Sequential
 from keras.regularizers import l2
+from tensorflow.keras.optimizers import Adam
 from keras.activations import relu
 from scipy.ndimage import zoom
 import tensorflow as tf
@@ -46,7 +47,7 @@ def attention_block(input_tensor):
     return Multiply()([input_tensor, se])
 
 def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
-    input_layer = Input(shape=(*target_shape, 3))
+    input_layer = Input(shape=(*target_shape, 1))
     x = Conv3D(32, (3, 3, 3), padding='same', kernel_regularizer=l2(1e-4))(input_layer)
     x = attention_block(x)
     x = BatchNormalization()(x)
@@ -89,7 +90,7 @@ def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     return model
 
-def residual_block_3d(input_tensor, filters, kernel_size=3):
+def residual_block_3d(input_tensor, filters, kernel_size=7):
     x = Conv3D(filters, kernel_size, padding='same', activation='relu', kernel_initializer='he_normal')(input_tensor)
     x = BatchNormalization()(x)
     x = Conv3D(filters, kernel_size, padding='same', kernel_initializer='he_normal')(x)
@@ -100,11 +101,11 @@ def residual_block_3d(input_tensor, filters, kernel_size=3):
 
     x = add([x, shortcut])
     x = ReLU()(x)
-    #x = Dropout(0.1)(x)
+    x = Dropout(0.1)(x)
     return x
 
 def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
-    inputs = Input(shape=(*input_shape, 3))
+    inputs = Input(shape=(*input_shape, 1))
 
     # Initial Convolution
     x = Conv3D(64, kernel_size=7, strides=2, padding='same', activation='relu')(inputs)
@@ -112,20 +113,45 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     x = MaxPooling3D(pool_size=2, strides=2, padding='same')(x)
 
     # Residual Blocks
-    x = residual_block_3d(x, 64)
+    #x = residual_block_3d(x, 32)
+    #x = residual_block_3d(x, 64)
     x = residual_block_3d(x, 128)
     x = residual_block_3d(x, 256)
-    x = residual_block_3d(x, 512)
+    #x = residual_block_3d(x, 512)
     #x = residual_block_3d(x, 1024)
 
     # Global Average Pooling
     x = GlobalAveragePooling3D()(x)
 
     # Fully Connected Layers
-    x = Dense(256, activation='relu')(x)
+    x = Dense(256, activation='relu', kernel_regularizer=l2(1e-4))(x)
     x = Dropout(0.5)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
 
     model = Model(inputs, outputs)
 
+    return model
+
+def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
+    inputs = Input(shape=(*input_shape, 1))
+    
+    x = Conv3D(32, kernel_size=(3, 3, 3), padding='same', activation='relu')(inputs)
+    x = MaxPooling3D(pool_size=(2, 2, 1))(x)
+    x = Dropout(0.25)(x)
+    
+    x = Conv3D(64, kernel_size=(3, 3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling3D(pool_size=(2, 2, 1))(x)
+    x = Dropout(0.25)(x)
+    
+    x = Conv3D(128, kernel_size=(3, 3, 3), padding='same', activation='relu')(x)
+    x = MaxPooling3D(pool_size=(2, 2, 1))(x)
+    x = Dropout(0.25)(x)
+    
+    x = Flatten()(x)
+    x = Dense(512, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    outputs = Dense(num_classes, activation='softmax')(x)
+    
+    model = Model(inputs, outputs)
+    
     return model

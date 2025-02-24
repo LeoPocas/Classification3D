@@ -157,7 +157,7 @@ def load_4d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
                     volume_3d = apply_clahe(volume_3d)
                     volume_3d = pad_or_crop_volume(volume_3d, target_shape)
                     volume_3d = (volume_3d - np.min(volume_3d)) / (np.max(volume_3d) - np.min(volume_3d))      
-                    volume_3d = np.repeat(volume_3d[..., np.newaxis], 3, axis=-1)
+                    volume_3d = volume_3d[..., np.newaxis]
                     
                     volumes.append(volume_3d)
                     labels.append(label)
@@ -205,7 +205,7 @@ def load_3d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
                         volume_3d = apply_clahe(volume_3d)
                         volume_3d = (volume_3d - np.min(volume_3d)) / (np.max(volume_3d) - np.min(volume_3d))  
                         volume_3d = pad_or_crop_volume(volume_3d, target_shape)
-                        volume_3d = np.repeat(volume_3d[..., np.newaxis], 3, axis=-1)
+                        volume_3d = np.repeat(volume_3d[..., np.newaxis], 1, axis=-1)
                         volumes.append(volume_3d)
                         labels.append(label)
                 

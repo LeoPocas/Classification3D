@@ -39,7 +39,7 @@ print(f"Shape do primeiro volume: {volumes[56].shape}")
 
 # Selecionar uma fatia específica do volume para visualização
 # Aqui, escolhemos a primeira profundidade e a primeira fatia de tempo
-fatia_altura_largura = volumes[56, :, :, 1, 0]  # Shape será (128, 128) após selecionar as fatias específicas
+fatia_altura_largura = volumes[56, :, :, 5, 0]  # Shape será (128, 128) após selecionar as fatias específicas
 
 # Exibir a fatia selecionada
 plt.imshow(fatia_altura_largura, cmap="gray")
