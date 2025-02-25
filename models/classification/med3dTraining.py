@@ -52,9 +52,11 @@ print(f"Imagens: {images.shape}, Labels: {labels.shape}")
 # Dividir os dados após o augmentation
 # x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.2, random_state=35)
 x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.1, random_state=42)
+
 #model = cnn_3d_model()
-model = build_med3d()
-# model = newModel()
+#model = build_med3d()
+model = newModel()
+
 # Compilar o modelo
 optimizer = Adam(learning_rate=0.003)
 model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accuracy'])
@@ -63,14 +65,14 @@ model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accu
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "med3d_4d_roi_clahe.weights.keras", save_best_only=False, monitor="val_loss"),
     ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=6, min_lr=1e-6),
-    ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=50)
+    ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=20)
 ]
 
 # Treinar o modelo
 history = model.fit(
     x_train, y_train,
     validation_data=(x_val, y_val),
-    epochs=150, batch_size=50,
+    epochs=60, batch_size=20,
     callbacks=callbacks,
     verbose=2
 )
