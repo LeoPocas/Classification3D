@@ -1,7 +1,7 @@
 import os
 
 LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
-TARGET_SHAPE = (80, 80, 16)
+TARGET_SHAPE = (96, 96, 16)
 NUM_CLASSES = 5
 MAX_TIME_DIM = 16
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

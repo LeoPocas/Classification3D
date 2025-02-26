@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import gc
 from Classification3D.models.classification.med3d import cnn_3d_model, build_med3d, newModel
 from Classification3D.preprocessing.load_data import load_4d_and_extract_3d_volumes, load_4d_roi_sep, load_3d_roi_sep
 from sklearn.model_selection import train_test_split
@@ -58,13 +59,13 @@ x_train, x_val, y_train, y_val = train_test_split(images, labels, test_size=0.1,
 model = newModel()
 
 # Compilar o modelo
-optimizer = Adam(learning_rate=0.003)
+optimizer = Adam(learning_rate=0.03)
 model.compile(optimizer=optimizer, loss=combined_loss(alpha=0.5), metrics=['accuracy'])
 
 # Configurar os callbacks
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "med3d_4d_roi_clahe.weights.keras", save_best_only=False, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=6, min_lr=1e-6),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=20)
 ]
 
@@ -72,7 +73,7 @@ callbacks = [
 history = model.fit(
     x_train, y_train,
     validation_data=(x_val, y_val),
-    epochs=60, batch_size=20,
+    epochs=80, batch_size=20,
     callbacks=callbacks,
     verbose=2
 )
@@ -80,3 +81,6 @@ history = model.fit(
 test_images, test_masks = load_3d_roi_sep(ACDC_TESTING_PATH)
 results = model.evaluate(test_images, test_masks, verbose=1)
 print(results)
+
+del x_train, y_train, x_val, y_val, test_images, test_masks, history
+gc.collect()
