@@ -1,100 +1,100 @@
-(14, 10, 72, 72) patient patient094_4d.nii.gz
-(20, 8, 68, 68) patient patient020_4d.nii.gz
-(30, 7, 76, 76) patient patient069_4d.nii.gz
-(30, 10, 76, 76) patient patient071_4d.nii.gz
-(13, 12, 62, 62) patient patient043_4d.nii.gz
-(30, 10, 76, 76) patient patient033_4d.nii.gz
-(30, 11, 84, 84) patient patient019_4d.nii.gz
-(30, 10, 76, 76) patient patient034_4d.nii.gz
-(30, 10, 76, 76) patient patient032_4d.nii.gz
-(30, 8, 76, 76) patient patient076_4d.nii.gz
-(25, 8, 86, 86) patient patient077_4d.nii.gz
-(28, 7, 76, 76) patient patient068_4d.nii.gz
-(25, 8, 170, 170) patient patient057_4d.nii.gz
-(24, 8, 144, 144) patient patient038_4d.nii.gz
-(28, 13, 72, 72) patient patient035_4d.nii.gz
-(30, 8, 76, 76) patient patient072_4d.nii.gz
-(28, 7, 86, 86) patient patient022_4d.nii.gz
-(21, 6, 68, 68) patient patient080_4d.nii.gz
-(16, 17, 72, 72) patient patient081_4d.nii.gz
-(28, 8, 84, 84) patient patient087_4d.nii.gz
-(17, 6, 76, 76) patient patient083_4d.nii.gz
-(30, 10, 72, 72) patient patient021_4d.nii.gz
-(16, 8, 76, 76) patient patient091_4d.nii.gz
-(30, 10, 88, 88) patient patient027_4d.nii.gz
-(28, 10, 76, 76) patient patient028_4d.nii.gz
-(30, 9, 88, 88) patient patient056_4d.nii.gz
-(35, 10, 84, 84) patient patient030_4d.nii.gz
-(30, 10, 80, 80) patient patient031_4d.nii.gz
-(28, 10, 88, 88) patient patient004_4d.nii.gz
-(30, 10, 88, 88) patient patient014_4d.nii.gz
-(30, 10, 88, 88) patient patient067_4d.nii.gz
-(13, 8, 88, 88) patient patient018_4d.nii.gz
-(35, 8, 76, 76) patient patient045_4d.nii.gz
-(25, 16, 72, 72) patient patient088_4d.nii.gz
-(30, 9, 88, 88) patient patient079_4d.nii.gz
-(30, 7, 88, 88) patient patient053_4d.nii.gz
-(35, 8, 88, 88) patient patient063_4d.nii.gz
-(15, 15, 72, 72) patient patient092_4d.nii.gz
-(35, 10, 88, 88) patient patient009_4d.nii.gz
-(30, 7, 64, 64) patient patient037_4d.nii.gz
-(30, 9, 88, 88) patient patient059_4d.nii.gz
-(30, 9, 88, 88) patient patient061_4d.nii.gz
-(35, 10, 84, 84) patient patient064_4d.nii.gz
-(30, 10, 88, 88) patient patient062_4d.nii.gz
-(30, 10, 76, 76) patient patient093_4d.nii.gz
-(30, 10, 76, 76) patient patient003_4d.nii.gz
-(19, 9, 76, 76) patient patient017_4d.nii.gz
-(30, 8, 88, 88) patient patient078_4d.nii.gz
-(30, 8, 80, 80) patient patient097_4d.nii.gz
-(28, 9, 74, 74) patient patient039_4d.nii.gz
-(20, 8, 80, 80) patient patient052_4d.nii.gz
-(28, 8, 76, 76) patient patient048_4d.nii.gz
-(30, 14, 76, 76) patient patient095_4d.nii.gz
-(30, 10, 74, 74) patient patient051_4d.nii.gz
-(30, 8, 76, 76) patient patient074_4d.nii.gz
-(30, 9, 76, 76) patient patient046_4d.nii.gz
-(30, 8, 64, 64) patient patient065_4d.nii.gz
-(35, 9, 68, 68) patient patient042_4d.nii.gz
-(19, 7, 76, 76) patient patient086_4d.nii.gz
-(25, 9, 80, 80) patient patient055_4d.nii.gz
-(30, 9, 76, 76) patient patient060_4d.nii.gz
-(17, 6, 68, 68) patient patient041_4d.nii.gz
-(28, 6, 76, 76) patient patient070_4d.nii.gz
-(30, 15, 98, 98) patient patient085_4d.nii.gz
-(28, 11, 68, 68) patient patient006_4d.nii.gz
-(15, 9, 80, 80) patient patient011_4d.nii.gz
-(34, 8, 92, 92) patient patient100_4d.nii.gz
-(14, 14, 68, 68) patient patient075_4d.nii.gz
-(30, 9, 88, 88) patient patient066_4d.nii.gz
-(19, 16, 68, 68) patient patient099_4d.nii.gz
-(30, 8, 80, 80) patient patient054_4d.nii.gz
-(28, 10, 76, 76) patient patient010_4d.nii.gz
-(12, 7, 68, 68) patient patient090_4d.nii.gz
-(35, 8, 84, 84) patient patient036_4d.nii.gz
-(22, 9, 72, 72) patient patient047_4d.nii.gz
-(28, 10, 88, 88) patient patient026_4d.nii.gz
-(30, 10, 84, 84) patient patient013_4d.nii.gz
-(16, 10, 64, 64) patient patient007_4d.nii.gz
-(30, 10, 88, 88) patient patient050_4d.nii.gz
-(30, 9, 86, 86) patient patient058_4d.nii.gz
-(35, 7, 88, 88) patient patient049_4d.nii.gz
-(25, 9, 88, 88) patient patient025_4d.nii.gz
-(30, 10, 88, 88) patient patient002_4d.nii.gz
-(17, 16, 68, 68) patient patient082_4d.nii.gz
-(30, 11, 88, 88) patient patient029_4d.nii.gz
-(15, 18, 72, 72) patient patient096_4d.nii.gz
-(22, 7, 96, 96) patient patient098_4d.nii.gz
-(35, 10, 80, 80) patient patient040_4d.nii.gz
-(25, 9, 84, 84) patient patient023_4d.nii.gz
-(30, 10, 76, 76) patient patient001_4d.nii.gz
-(30, 10, 76, 76) patient patient012_4d.nii.gz
-(30, 9, 88, 88) patient patient044_4d.nii.gz
-(30, 10, 84, 84) patient patient016_4d.nii.gz
-(28, 8, 76, 76) patient patient024_4d.nii.gz
-(35, 7, 74, 74) patient patient073_4d.nii.gz
-(30, 6, 82, 82) patient patient089_4d.nii.gz
-(21, 9, 88, 88) patient patient015_4d.nii.gz
-(28, 10, 76, 76) patient patient008_4d.nii.gz
-(30, 10, 86, 86) patient patient005_4d.nii.gz
-(35, 12, 88, 88) patient patient084_4d.nii.gz
+(30, 10, 96, 96) labels 3 patient patient033_4d.nii.gz
+(13, 12, 78, 78) labels 1 patient patient043_4d.nii.gz
+(28, 10, 96, 96) labels 2 patient patient008_4d.nii.gz
+(28, 6, 96, 96) labels 0 patient patient070_4d.nii.gz
+(25, 9, 110, 110) labels 3 patient patient025_4d.nii.gz
+(30, 10, 110, 110) labels 1 patient patient050_4d.nii.gz
+(28, 10, 96, 96) labels 3 patient patient028_4d.nii.gz
+(15, 18, 90, 90) labels 4 patient patient096_4d.nii.gz
+(28, 10, 110, 110) labels 3 patient patient026_4d.nii.gz
+(30, 10, 92, 92) labels 1 patient patient051_4d.nii.gz
+(30, 8, 102, 102) labels 4 patient patient097_4d.nii.gz
+(30, 10, 104, 104) labels 2 patient patient016_4d.nii.gz
+(35, 9, 86, 86) labels 1 patient patient042_4d.nii.gz
+(30, 10, 110, 110) labels 2 patient patient014_4d.nii.gz
+(30, 6, 102, 102) labels 4 patient patient089_4d.nii.gz
+(28, 8, 96, 96) labels 1 patient patient048_4d.nii.gz
+(28, 8, 104, 104) labels 4 patient patient087_4d.nii.gz
+(35, 12, 110, 110) labels 4 patient patient084_4d.nii.gz
+(30, 11, 104, 104) labels 2 patient patient019_4d.nii.gz
+(28, 13, 90, 90) labels 3 patient patient035_4d.nii.gz
+(21, 9, 110, 110) labels 2 patient patient015_4d.nii.gz
+(30, 10, 102, 102) labels 3 patient patient031_4d.nii.gz
+(30, 10, 96, 96) labels 2 patient patient012_4d.nii.gz
+(30, 10, 96, 96) labels 2 patient patient001_4d.nii.gz
+(16, 17, 90, 90) labels 4 patient patient081_4d.nii.gz
+(28, 10, 110, 110) labels 2 patient patient004_4d.nii.gz
+(30, 10, 96, 96) labels 3 patient patient032_4d.nii.gz
+(30, 7, 110, 110) labels 1 patient patient053_4d.nii.gz
+(21, 6, 86, 86) labels 0 patient patient080_4d.nii.gz
+(30, 8, 96, 96) labels 0 patient patient074_4d.nii.gz
+(25, 8, 214, 214) labels 1 patient patient057_4d.nii.gz
+(12, 7, 84, 84) labels 4 patient patient090_4d.nii.gz
+(30, 11, 110, 110) labels 3 patient patient029_4d.nii.gz
+(30, 14, 96, 96) labels 4 patient patient095_4d.nii.gz
+(25, 9, 102, 102) labels 1 patient patient055_4d.nii.gz
+(15, 9, 102, 102) labels 2 patient patient011_4d.nii.gz
+(28, 8, 96, 96) labels 3 patient patient024_4d.nii.gz
+(30, 9, 110, 110) labels 1 patient patient044_4d.nii.gz
+(14, 14, 84, 84) labels 0 patient patient075_4d.nii.gz
+(30, 10, 110, 110) labels 3 patient patient027_4d.nii.gz
+(30, 9, 96, 96) labels 1 patient patient060_4d.nii.gz
+(17, 6, 84, 84) labels 1 patient patient041_4d.nii.gz
+(30, 10, 104, 104) labels 2 patient patient013_4d.nii.gz
+(30, 8, 110, 110) labels 0 patient patient078_4d.nii.gz
+(30, 15, 124, 124) labels 4 patient patient085_4d.nii.gz
+(19, 7, 96, 96) labels 4 patient patient086_4d.nii.gz
+(19, 16, 84, 84) labels 4 patient patient099_4d.nii.gz
+(35, 10, 102, 102) labels 3 patient patient040_4d.nii.gz
+(30, 9, 96, 96) labels 1 patient patient046_4d.nii.gz
+(24, 8, 180, 180) labels 3 patient patient038_4d.nii.gz
+(30, 8, 96, 96) labels 0 patient patient076_4d.nii.gz
+(28, 10, 96, 96) labels 2 patient patient010_4d.nii.gz
+(16, 10, 80, 80) labels 2 patient patient007_4d.nii.gz
+(30, 10, 96, 96) labels 0 patient patient071_4d.nii.gz
+(30, 7, 80, 80) labels 3 patient patient037_4d.nii.gz
+(17, 16, 84, 84) labels 4 patient patient082_4d.nii.gz
+(20, 8, 102, 102) labels 1 patient patient052_4d.nii.gz
+(34, 8, 114, 114) labels 4 patient patient100_4d.nii.gz
+(30, 10, 110, 110) labels 2 patient patient002_4d.nii.gz
+(35, 8, 104, 104) labels 3 patient patient036_4d.nii.gz
+(30, 10, 96, 96) labels 3 patient patient034_4d.nii.gz
+(14, 10, 90, 90) labels 4 patient patient094_4d.nii.gz
+(35, 10, 104, 104) labels 3 patient patient030_4d.nii.gz
+(30, 8, 80, 80) labels 0 patient patient065_4d.nii.gz
+(25, 8, 106, 106) labels 0 patient patient077_4d.nii.gz
+(30, 10, 110, 110) labels 0 patient patient062_4d.nii.gz
+(25, 16, 90, 90) labels 4 patient patient088_4d.nii.gz
+(30, 10, 96, 96) labels 2 patient patient003_4d.nii.gz
+(35, 7, 92, 92) labels 0 patient patient073_4d.nii.gz
+(15, 15, 90, 90) labels 4 patient patient092_4d.nii.gz
+(17, 6, 96, 96) labels 4 patient patient083_4d.nii.gz
+(13, 8, 110, 110) labels 2 patient patient018_4d.nii.gz
+(30, 9, 106, 106) labels 1 patient patient058_4d.nii.gz
+(35, 8, 96, 96) labels 1 patient patient045_4d.nii.gz
+(22, 9, 90, 90) labels 1 patient patient047_4d.nii.gz
+(30, 8, 96, 96) labels 0 patient patient072_4d.nii.gz
+(35, 10, 110, 110) labels 2 patient patient009_4d.nii.gz
+(30, 9, 110, 110) labels 0 patient patient061_4d.nii.gz
+(30, 10, 96, 96) labels 4 patient patient093_4d.nii.gz
+(30, 10, 106, 106) labels 2 patient patient005_4d.nii.gz
+(30, 9, 110, 110) labels 1 patient patient056_4d.nii.gz
+(25, 9, 104, 104) labels 3 patient patient023_4d.nii.gz
+(28, 11, 86, 86) labels 2 patient patient006_4d.nii.gz
+(35, 7, 110, 110) labels 1 patient patient049_4d.nii.gz
+(35, 8, 110, 110) labels 0 patient patient063_4d.nii.gz
+(16, 8, 96, 96) labels 4 patient patient091_4d.nii.gz
+(30, 9, 110, 110) labels 0 patient patient066_4d.nii.gz
+(30, 7, 96, 96) labels 0 patient patient069_4d.nii.gz
+(20, 8, 86, 86) labels 2 patient patient020_4d.nii.gz
+(30, 8, 102, 102) labels 1 patient patient054_4d.nii.gz
+(30, 10, 90, 90) labels 3 patient patient021_4d.nii.gz
+(30, 10, 110, 110) labels 0 patient patient067_4d.nii.gz
+(30, 9, 110, 110) labels 0 patient patient079_4d.nii.gz
+(28, 9, 92, 92) labels 3 patient patient039_4d.nii.gz
+(35, 10, 104, 104) labels 0 patient patient064_4d.nii.gz
+(30, 9, 110, 110) labels 1 patient patient059_4d.nii.gz
+(28, 7, 106, 106) labels 3 patient patient022_4d.nii.gz
+(22, 7, 120, 120) labels 4 patient patient098_4d.nii.gz
+(19, 9, 96, 96) labels 2 patient patient017_4d.nii.gz
+(28, 7, 96, 96) labels 0 patient patient068_4d.nii.gz

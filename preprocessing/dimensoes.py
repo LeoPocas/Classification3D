@@ -5,10 +5,11 @@ from preprocessing.roiExtraction import get_ROI_distance_transform
 from Classification3D.utils import OUTPUT_PATH
 from Classification3D.utils import *
 
-def save_roi_dimensions(roi_dimensions, filenames, output_path):
+def save_roi_dimensions(roi_dimensions, labels, filenames, output_path):
     with open(output_path, 'w') as f:
-        for dimensions, filename in zip(roi_dimensions, filenames):
-            f.write(f"{dimensions} patient {filename}\n")
+        for dimensions, label, filename in zip(roi_dimensions, labels, filenames):
+            f.write(f"{dimensions} labels {label} patient {filename}\n")
+
 
 def load_4d_and_extract_3d_volumes(data_dir, label_mapping, apply_padding_cropping=True, target_shape=None, voxel_size=None, zoom_factor=ZOOM, output_path=OUTPUT_PATH + 'roi_dimensions.txt'):
     volumes = []
@@ -48,7 +49,7 @@ def load_4d_and_extract_3d_volumes(data_dir, label_mapping, apply_padding_croppi
                 labels.append(label)
 
     # Salve as dimensões das ROIs
-    save_roi_dimensions(roi_dimensions, filenames, output_path)
+    save_roi_dimensions(roi_dimensions, labels, filenames, output_path)
 
     return volumes, labels
 

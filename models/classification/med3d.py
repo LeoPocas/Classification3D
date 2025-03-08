@@ -2,7 +2,7 @@ import numpy as np
 from keras.layers import Input, Conv3D, GlobalAveragePooling3D, GlobalMaxPooling3D, Dense, MaxPooling3D, BatchNormalization, Dropout, add, concatenate, LeakyReLU, Reshape, Multiply, ReLU, Flatten
 from keras.models import Model, Sequential
 from keras.regularizers import l2
-from tensorflow.keras.optimizers import Adam
+from keras.optimizers import Adam
 from keras.activations import relu
 from scipy.ndimage import zoom
 import tensorflow as tf
@@ -90,7 +90,7 @@ def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     return model
 
-def residual_block_3d(input_tensor, filters, kernel_size=7):
+def residual_block_3d(input_tensor, filters, kernel_size=2):
     x = Conv3D(filters, kernel_size, padding='same', activation='relu', kernel_initializer='he_normal')(input_tensor)
     x = BatchNormalization()(x)
     x = Conv3D(filters, kernel_size, padding='same', kernel_initializer='he_normal')(x)
@@ -101,20 +101,20 @@ def residual_block_3d(input_tensor, filters, kernel_size=7):
 
     x = add([x, shortcut])
     x = ReLU()(x)
-    x = Dropout(0.1)(x)
+    x = Dropout(0.05)(x)
     return x
 
-def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
-    inputs = Input(shape=(*input_shape, 1))
-
+def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES): 
+    #ResNet: Residual Network, ela ajuda a não termos perda elevada no gradiente utilizando skip connections
+    inputs = Input(shape=(*input_shape, 1), name='image_input')
     # Initial Convolution
-    x = Conv3D(64, kernel_size=7, strides=2, padding='same', activation='relu')(inputs)
+    x = Conv3D(64, kernel_size=1, padding='same', activation='relu')(inputs)
     x = BatchNormalization()(x)
-    x = MaxPooling3D(pool_size=2, strides=2, padding='same')(x)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
 
     # Residual Blocks
-    #x = residual_block_3d(x, 32)
-    #x = residual_block_3d(x, 64)
+    # x = residual_block_3d(x, 32)
+    x = residual_block_3d(x, 64)
     x = residual_block_3d(x, 128)
     x = residual_block_3d(x, 256)
     #x = residual_block_3d(x, 512)
@@ -122,14 +122,20 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
 
     # Global Average Pooling
     x = GlobalAveragePooling3D()(x)
+    # x = Conv3D(256, 1, padding='same', kernel_initializer='he_normal')(x)
+    x = Flatten()(x)
+
+    metadata_input = Input(shape=(2,), name='metadata_input') 
+    metadata_x = Dense(8, activation='relu')(metadata_input)  
+    combined = concatenate([x, metadata_x])
 
     # Fully Connected Layers
-    x = Dense(256, activation='relu', kernel_regularizer=l2(1e-4))(x)
-    x = Dropout(0.5)(x)
+    x = Dense(256, activation='relu')(combined)
+    # x = Dropout(0.5)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
 
-    model = Model(inputs, outputs)
-
+    model = Model(inputs={'image_input': inputs, 'metadata_input': metadata_input}, outputs=outputs)
+    
     return model
 
 def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
@@ -137,15 +143,15 @@ def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     x = Conv3D(16, kernel_size=1, padding='same', activation='relu')(inputs)
     x = BatchNormalization()(x)
-    # x = MaxPooling3D(pool_size=(2, 2, 1))(x)
-    x = Conv3D(32, kernel_size=1, padding='same', activation='relu')(x)
+    x = MaxPooling3D(pool_size=(2, 2, 1))(x)
+    x = Conv3D(32, kernel_size=1, padding='valid', activation='relu')(x)
     x = BatchNormalization()(x)
-    x = Conv3D(64, kernel_size=2, padding='same', activation='relu')(x)
+    x = Conv3D(64, kernel_size=2, padding='valid', activation='relu')(x)
     x = BatchNormalization()(x)
-    x = MaxPooling3D(pool_size=(2, 2, 1))(x) 
+    # x = MaxPooling3D(pool_size=(2, 2, 1))(x) 
 
-    x = Conv3D(128, kernel_size=1, padding='same', activation='relu')(x)
-    x = BatchNormalization()(x)
+    # x = Conv3D(128, kernel_size=1, padding='same', activation='relu')(x)
+    # x = BatchNormalization()(x)
     # x = Conv3D(256, kernel_size=2, padding='same', activation='relu')(x)
     # x = BatchNormalization()(x)
     # x = MaxPooling3D(pool_size=(2, 2, 1))(x)
@@ -157,10 +163,49 @@ def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # x = MaxPooling3D(pool_size=(2, 2, 2))(x)
     
     x = Flatten()(x)
-    x = Dense(256, activation='relu')(x)
+    x = Dense(64, activation='relu')(x)
     x = BatchNormalization()(x)
     outputs = Dense(num_classes, activation='softmax')(x)
     
     model = Model(inputs, outputs)
     
+    return model
+
+def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
+    # Primeiro input: Volume na sístole
+    systole_input = Input(shape=(*input_shape, 1), name='systole_input')
+    x1 = Conv3D(64, kernel_size=1, padding='same', activation='relu')(systole_input)
+    x1 = BatchNormalization()(x1)
+    x1 = MaxPooling3D(pool_size=2, padding='same')(x1)
+    x1 = residual_block_3d(x1, 64)
+    x1 = residual_block_3d(x1, 128)
+    x1 = residual_block_3d(x1, 256)
+    x1 = GlobalAveragePooling3D()(x1)
+    x1 = Flatten()(x1)
+
+    # Segundo input: Volume na diástole
+    diastole_input = Input(shape=(*input_shape, 1), name='diastole_input')
+    x2 = Conv3D(64, kernel_size=1, padding='same', activation='relu')(diastole_input)
+    x2 = BatchNormalization()(x2)
+    x2 = MaxPooling3D(pool_size=2, padding='same')(x2)
+    x2 = residual_block_3d(x2, 64)
+    x2 = residual_block_3d(x2, 128)
+    x2 = residual_block_3d(x2, 256)
+    x2 = GlobalAveragePooling3D()(x2)
+    x2 = Flatten()(x2)
+
+    # Entrada dos metadados (peso e altura)
+    metadata_input = Input(shape=(3,), name='metadata_input')  # Exemplo: peso, altura
+    metadata_x = Dense(9, activation='relu')(metadata_input)
+
+    # Combinação das três entradas
+    combined = concatenate([x1, x2, metadata_x])
+
+    # Camadas densas finais
+    x = Dense(256, activation='relu')(combined)
+    outputs = Dense(num_classes, activation='softmax')(x)
+
+    # Modelo final
+    model = Model(inputs={'systole_input': systole_input, 'diastole_input': diastole_input, 'metadata_input': metadata_input}, 
+                  outputs=outputs)
     return model
