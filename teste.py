@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 import nibabel as nib
 from preprocessing.load_data import load_4d_roi_sep, load_acdc_data_3d
+from preprocessing.load_mms import load_mmms_data
 from utils import OUTPUT_PATH
 path_nii = './ACDC/database/training/patient057/patient057_4d.nii.gz'
 matplotlib.use('Agg')  # Força o uso do backend 'Agg'
@@ -34,15 +35,15 @@ f, axarr = plt.subplots(1,2)
 
 plt.savefig(OUTPUT_PATH + "algo.jpg")
 
-volumes, label = load_acdc_data_3d()
-
+# volumes, label, discard = load_acdc_data_3d()
+volumes, label, discard = load_4d_roi_sep()
 
 # Verificar o shape do primeiro volume
 print(f"Shape do primeiro volume: {volumes[56].shape}")
 print(f"Volumes: {volumes.shape}, \n Labels:{label}")
 # Selecionar uma fatia específica do volume para visualização
 # Aqui, escolhemos a primeira profundidade e a primeira fatia de tempo
-fatia_altura_largura = volumes[56, :, :, 5, 0]  # Shape será (128, 128) após selecionar as fatias específicas
+fatia_altura_largura = volumes[56, :, :, 5, 0]
 
 # Exibir a fatia selecionada
 plt.imshow(fatia_altura_largura, cmap="gray")
@@ -70,3 +71,30 @@ volume_index = 0  # Escolha o volume que deseja visualizar
 #     plt.axis('off')
 #     plt.savefig(str(i) + "_new.png")
 #     plt.show()
+
+volumes, label, discard = load_mmms_data()
+
+# Verificar o shape do primeiro volume
+print(f"Shape do primeiro volume: {volumes[56].shape}")
+print(f"Volumes: {volumes.shape}, \n Labels:{label}")
+# Selecionar uma fatia específica do volume para visualização
+# Aqui, escolhemos a primeira profundidade e a primeira fatia de tempo
+fatia_altura_largura = volumes[56, :, :, 5, 0] 
+
+# Exibir a fatia selecionada
+plt.imshow(fatia_altura_largura, cmap="gray")
+plt.title("Fatia do Volume")
+plt.colorbar()
+plt.savefig(OUTPUT_PATH + "volume_slicemm.png")
+
+volume_index = 56  
+slice_index = volumes.shape[3] // 2  # Fatia central
+
+# Plotagem da imagem do volume
+plt.figure(figsize=(10, 5))
+plt.imshow(volumes[volume_index, :, :, slice_index, 0], cmap='gray')
+plt.title(f"Volume {volume_index}, Slice {slice_index}")
+plt.axis('off')
+plt.savefig(OUTPUT_PATH + "/newmm.png")
+
+volume_index = 0  # Escolha o volume que deseja visualizar

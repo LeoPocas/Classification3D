@@ -9,6 +9,7 @@ __pycache__/
 ACDC/ 
 acdc.py
 teste.py
+OpenDataset*
 
 # C extensions
 *.so

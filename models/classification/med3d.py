@@ -202,7 +202,7 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     combined = concatenate([x1, x2, metadata_x])
 
     # Camadas densas finais
-    x = Dense(256, activation='relu')(combined)
+    x = Dense(128, activation='relu')(combined)
     outputs = Dense(num_classes, activation='softmax')(x)
 
     # Modelo final
