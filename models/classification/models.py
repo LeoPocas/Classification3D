@@ -101,10 +101,10 @@ def residual_block_3d(input_tensor, filters, kernel_size=2):
 
     x = add([x, shortcut])
     x = ReLU()(x)
-    x = Dropout(0.05)(x)
+    x = Dropout(0.15)(x)
     return x
 
-def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES): 
+def build_med3d(input_shape=TARGET_SHAPE, num_classes=4): 
     #ResNet: Residual Network, ela ajuda a não termos perda elevada no gradiente utilizando skip connections
     inputs = Input(shape=(*input_shape, 1), name='image_input')
     # Initial Convolution
@@ -125,12 +125,12 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # x = Conv3D(256, 1, padding='same', kernel_initializer='he_normal')(x)
     x = Flatten()(x)
 
-    metadata_input = Input(shape=(2,), name='metadata_input') 
-    metadata_x = Dense(8, activation='relu')(metadata_input)  
-    combined = concatenate([x, metadata_x])
+    metadata_input = Input(shape=(3,), name='metadata_input') 
+    # metadata_x = Dense(8, activation='relu')(metadata_input)  
+    # combined = concatenate([x, metadata_x])
 
     # Fully Connected Layers
-    x = Dense(256, activation='relu')(combined)
+    x = Dense(256, activation='relu')(x)
     # x = Dropout(0.5)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
 
@@ -194,15 +194,14 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     x2 = GlobalAveragePooling3D()(x2)
     x2 = Flatten()(x2)
 
-    # Entrada dos metadados (peso e altura)
-    metadata_input = Input(shape=(3,), name='metadata_input')  # Exemplo: peso, altura
+    metadata_input = Input(shape=(3,), name='metadata_input')
     metadata_x = Dense(9, activation='relu')(metadata_input)
 
     # Combinação das três entradas
     combined = concatenate([x1, x2, metadata_x])
 
     # Camadas densas finais
-    x = Dense(128, activation='relu')(combined)
+    x = Dense(256, activation='relu')(combined)
     outputs = Dense(num_classes, activation='softmax')(x)
 
     # Modelo final

@@ -10,6 +10,8 @@ ACDC/
 acdc.py
 teste.py
 OpenDataset*
+kaggle
+output/
 
 # C extensions
 *.so

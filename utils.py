@@ -1,7 +1,7 @@
 import os
 
 LABEL_MAPPING = {'NOR': 0, 'MINF': 1, 'DCM': 2, 'HCM': 3, 'RV': 4}
-LABEL_MAPPING_MMS = {"NOR": 0,"HHD": 1,"DCM": 2,"HCM": 3,"ARV": 4,"AHS": 5,"Other": -1}
+LABEL_MAPPING_MMS = {"Other": 0, "NOR": 1, "DCM": 2,"HCM": 3} # Removi AHS pois há apenas um caso valido no dataset"HHD": 1,"ARV": 4, 
 NUM_CLASSES_MMS = 7
 TARGET_SHAPE = (128, 128, 16)
 NUM_CLASSES = 5
@@ -12,9 +12,9 @@ ACDC_TESTING_PATH = os.path.join(BASE_DIR, './ACDC/database/testing/')
 OUTPUT_PATH = os.path.join(BASE_DIR, './output/')
 WEIGHT_PATH = os.path.join(BASE_DIR, './weights/')
 CSV_PATH=os.path.join(BASE_DIR,'./OpenDataset/211230_M&Ms_Dataset_information_diagnosis_opendataset.csv')
-MMs_TRAINING = os.path.join(BASE_DIR,'./OpenDataset/Training')
-MMs_TESTING = os.path.join(BASE_DIR,'./OpenDataset/Testing')
-MMs_VALIDATION = os.path.join(BASE_DIR,'./OpenDataset/Validation')
+MMs_PATH = os.path.join(BASE_DIR,'./OpenDataset/')
+MMs_VALIDATION = os.path.join(BASE_DIR,'./OpenDataset/Validation/')
 ZOOM=1.0
-GRID=(3,3)
-CLIP=1
+GRID=(1,1)
+CLIP=0.2
+KAGGLE_PATH = os.path.join(BASE_DIR,'./kaggle/input/')

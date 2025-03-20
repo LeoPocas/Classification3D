@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 import nibabel as nib
 from preprocessing.load_data import load_4d_roi_sep, load_acdc_data_3d
-from preprocessing.load_mms import load_mmms_data
+from preprocessing.load_mms import load_mms_data, load_mms_data_dual_input
 from utils import OUTPUT_PATH
 path_nii = './ACDC/database/training/patient057/patient057_4d.nii.gz'
 matplotlib.use('Agg')  # Força o uso do backend 'Agg'
@@ -35,8 +35,8 @@ f, axarr = plt.subplots(1,2)
 
 plt.savefig(OUTPUT_PATH + "algo.jpg")
 
-# volumes, label, discard = load_acdc_data_3d()
-volumes, label, discard = load_4d_roi_sep()
+volumes, label, discard = load_acdc_data_3d()
+# volumes, label, discard = load_4d_roi_sep()
 
 # Verificar o shape do primeiro volume
 print(f"Shape do primeiro volume: {volumes[56].shape}")
@@ -72,14 +72,22 @@ volume_index = 0  # Escolha o volume que deseja visualizar
 #     plt.savefig(str(i) + "_new.png")
 #     plt.show()
 
-volumes, label, discard = load_mmms_data()
+data, label = load_mms_data_dual_input()  # Retorna o dicionário e os labels
 
-# Verificar o shape do primeiro volume
-print(f"Shape do primeiro volume: {volumes[56].shape}")
-print(f"Volumes: {volumes.shape}, \n Labels:{label}")
+systole_volumes = data['systole']  # Volumes de sístole
+diastole_volumes = data['diastole']  # Volumes de diástole
+metadata = data['metadata']  # Dados adicionais do paciente (peso, sexo, idade)
+
+# Verifique os shapes dos volumes corretamente
+print(f"Shape dos volumes de sístole: {systole_volumes.shape}")
+print(f"Shape dos volumes de diástole: {diastole_volumes.shape}")
+print(f"Shape dos metadados: {metadata.shape}")
+print(f"Shape dos labels: {label.shape}")
+
+
 # Selecionar uma fatia específica do volume para visualização
 # Aqui, escolhemos a primeira profundidade e a primeira fatia de tempo
-fatia_altura_largura = volumes[56, :, :, 5, 0] 
+fatia_altura_largura = systole_volumes[56, :, :, 5, 0] 
 
 # Exibir a fatia selecionada
 plt.imshow(fatia_altura_largura, cmap="gray")
@@ -88,13 +96,11 @@ plt.colorbar()
 plt.savefig(OUTPUT_PATH + "volume_slicemm.png")
 
 volume_index = 56  
-slice_index = volumes.shape[3] // 2  # Fatia central
+slice_index = diastole_volumes.shape[3] // 2  # Fatia central
 
 # Plotagem da imagem do volume
 plt.figure(figsize=(10, 5))
-plt.imshow(volumes[volume_index, :, :, slice_index, 0], cmap='gray')
+plt.imshow(diastole_volumes[volume_index, :, :, slice_index, 0], cmap='gray')
 plt.title(f"Volume {volume_index}, Slice {slice_index}")
 plt.axis('off')
 plt.savefig(OUTPUT_PATH + "/newmm.png")
-
-volume_index = 0  # Escolha o volume que deseja visualizar

@@ -12,7 +12,7 @@ def save_roi_dimensions(roi_dimensions, patient_data, labels, filenames, output_
             f.write(f"Dimensions: {dimensions} | Label: {label} | Pathology: {pathology} | Height: {height} | Weight: {weight} | Sex: {sex} | Age: {age} | Filename: {filename}\n")
 
 
-def load_mmms_and_extract_3d_volumes(data_dir=MMs_TRAINING, csv_path=CSV_PATH, label_mapping=LABEL_MAPPING_MMS, zoom_factor=ZOOM, output_path=OUTPUT_PATH + 'roi_dimensions_mms.txt'):
+def load_mmms_and_extract_3d_volumes(data_dir=MMs_PATH, csv_path=CSV_PATH, label_mapping=LABEL_MAPPING_MMS, zoom_factor=ZOOM, output_path=OUTPUT_PATH + 'dimensions_mms.txt'):
     volumes = []
     labels = []
     roi_dimensions = []
@@ -39,8 +39,11 @@ def load_mmms_and_extract_3d_volumes(data_dir=MMs_TRAINING, csv_path=CSV_PATH, l
                 'age': age
             }
 
-    # Processa dados das pastas 'labeled' e 'unlabeled'
-    for folder in ['Labeled', 'Unlabeled']:
+    if True:
+        folders = ['Training/Labeled', 'Training/Unlabeled', 'Testing']
+    else: 
+        folders = ['Validation']
+    for folder in folders:
         folder_path = os.path.join(data_dir, folder)
         if not os.path.exists(folder_path):
             print(f"Atenção: A pasta {folder} não existe em {data_dir}.")
