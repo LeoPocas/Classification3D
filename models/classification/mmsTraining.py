@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import gc
-from Classification3D.models.classification.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet
+from Classification3D.models.classification.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet, build_med3d_with_ssl
 from Classification3D.preprocessing.load_mms import load_mms_data, load_mms_data_dual_input
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
@@ -90,16 +90,17 @@ x_train_img, x_val_img, y_train, y_val, x_train_meta, x_val_meta = train_test_sp
 # )
 
 # model = dualInput_Resnet(num_classes=len(LABEL_MAPPING_MMS))  # Adaptado para múltiplos inputs (imagem + metadados)
-model = build_med3d()
+# model = build_med3d()
+model = build_med3d_with_ssl()
 
 # Compilar o modelo
-optimizer = Adam(learning_rate=0.0003)
+optimizer = Adam(learning_rate=0.003)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Configurar callbacks
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "mms_resnet.weights.keras", save_best_only=True, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.9, patience=6, min_lr=1e-6),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val_img, x_val_meta, y_val), batch_size=10)
 ]
 
@@ -116,7 +117,7 @@ history = model.fit(
     {'image_input': x_train_img, 'metadata_input': x_train_meta},
     y_train,
     validation_data=({'image_input': x_val_img, 'metadata_input': x_val_meta}, y_val),
-    epochs=100, batch_size=10,
+    epochs=100, batch_size=20,
     callbacks=callbacks,
     verbose=2
 )

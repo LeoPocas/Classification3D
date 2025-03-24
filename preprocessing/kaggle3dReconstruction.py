@@ -87,7 +87,7 @@ def process_patient(patient_id, patient_folder, output_dir):
 
 
 # Diretórios de entrada e saída
-input_dir = KAGGLE_PATH+'train/train'
+input_dirs = [KAGGLE_PATH+'train/train', KAGGLE_PATH+'test/test', KAGGLE_PATH+'validate/validate']
 output_dir = OUTPUT_PATH+'kaggled4D'
 os.makedirs(output_dir, exist_ok=True)
 
@@ -95,8 +95,9 @@ if os.path.exists(output_dir):
     shutil.rmtree(output_dir)  # Remove toda a pasta de saída
 os.makedirs(output_dir, exist_ok=True)
 
-for patient in os.listdir(input_dir):
-    folder_path = os.path.join(input_dir, patient)
-    patient_path =  os.path.join(folder_path, 'study')
-    if os.path.isdir(patient_path):
-        process_patient(patient, patient_path, output_dir)
+for input_dir in input_dirs:
+    for patient in os.listdir(input_dir):
+        folder_path = os.path.join(input_dir, patient)
+        patient_path =  os.path.join(folder_path, 'study')
+        if os.path.isdir(patient_path):
+            process_patient(patient, patient_path, output_dir)

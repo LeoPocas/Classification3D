@@ -2,10 +2,10 @@ import numpy as np
 from keras.layers import Input, Conv3D, GlobalAveragePooling3D, GlobalMaxPooling3D, Dense, MaxPooling3D, BatchNormalization, Dropout, add, concatenate, LeakyReLU, Reshape, Multiply, ReLU, Flatten
 from keras.models import Model, Sequential
 from keras.regularizers import l2
-from keras.optimizers import Adam
 from keras.activations import relu
 from scipy.ndimage import zoom
-import tensorflow as tf
+from Classification3D.models.ssl.simCLR import create_encoder
+from Classification3D.utils import WEIGHT_PATH
 
 from ...utils import TARGET_SHAPE, NUM_CLASSES
 
@@ -207,4 +207,28 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # Modelo final
     model = Model(inputs={'systole_input': systole_input, 'diastole_input': diastole_input, 'metadata_input': metadata_input}, 
                   outputs=outputs)
+    return model
+
+def build_med3d_with_ssl(input_shape=TARGET_SHAPE, num_classes=4, encoder_weights=WEIGHT_PATH+"encoder_ssl.weights.h5", trainable=False):
+    # Carrega o encoder pré-treinado
+    encoder = create_encoder()  # Usa a mesma função do SimCLR
+    encoder.load_weights(encoder_weights)  # Carrega os pesos treinados
+
+    # Define se o encoder será treinável ou congelado
+    encoder.trainable = trainable
+
+    # Entrada para as imagens
+    inputs = Input(shape=(*input_shape, 1), name='image_input')
+    x = encoder(inputs)  # Passa os dados pelo encoder pré-treinado
+
+    # Adiciona camadas do modelo supervisionado após o encoder
+    metadata_input = Input(shape=(3,), name='metadata_input')  # Entrada para metadados (opcional)
+
+    # Camadas finais para classificação
+    x = Dense(256, activation='relu')(x)
+    x = Flatten()(x)
+    outputs = Dense(num_classes, activation='softmax')(x)
+
+    # Criação do modelo com as entradas e saídas
+    model = Model(inputs={'image_input': inputs, 'metadata_input': metadata_input}, outputs=outputs)
     return model

@@ -1,47 +1,58 @@
-import tensorflow as tf
+import os
 import numpy as np
 import nibabel as nib
-import os
-import random
+import cv2
+from Classification3D.preprocessing.equalizacao import apply_clahe, pad_or_crop_volume
+from Classification3D.utils import OUTPUT_PATH, TARGET_SHAPE
 
 def load_nifti(file_path):
-    """Carrega um volume NIfTI e o converte para um tensor normalizado."""
-    img = nib.load(file_path)
-    data = img.get_fdata()
-    data = (data - np.min(data)) / (np.max(data) - np.min(data))
-    data = np.expand_dims(data, axis=-1)  # Adiciona canal para compatibilidade com CNNs
-    return data.astype(np.float32)
+    nii_img = nib.load(file_path)
+    volume_4d = nii_img.get_fdata()
+    return volume_4d
 
-def data_augmentation(volume):
-    """Aplica transformações aleatórias ao volume para SimCLR."""
-    # Flip horizontal e vertical
-    if random.random() > 0.5:
-        volume = tf.image.flip_left_right(volume)
-    if random.random() > 0.5:
-        volume = tf.image.flip_up_down(volume)
-    
-    # Mudança de brilho
-    volume = tf.image.random_brightness(volume, max_delta=0.1)
-    
-    # Mudança de contraste
-    volume = tf.image.random_contrast(volume, lower=0.8, upper=1.2)
-    
-    return volume
+def extract_3d_frames(volume_4d, strategy='all'):
+    """
+    Converte um volume 4D para 3D.
+    Estratégias:
+    - 'all': usa todos os frames.
+    - 'systole_diastole': tenta selecionar final de sístole e diástole.
+    """
+    if strategy == 'all':
+        return [volume_4d[..., i] for i in range(volume_4d.shape[-1])]
+    elif strategy == 'systole_diastole':
+        return [volume_4d[..., 0], volume_4d[..., -1]]  # Exemplo com primeiro e último frame
+    elif isinstance(strategy, int) and strategy > 0:
+        return [volume_4d[..., i] for i in range(0, volume_4d.shape[-1], strategy)]
+    else:
+        raise ValueError("Estratégia desconhecida")
 
-def prepare_ssl_dataset(kaggle_dataset_path, batch_size=8):
-    file_paths = [os.path.join(kaggle_dataset_path, f) for f in os.listdir(kaggle_dataset_path) if f.endswith('.nii')]
+def normalize(volume):
+    """Normaliza o volume para a faixa [0, 1]."""
+    return (volume - np.min(volume)) / (np.max(volume) - np.min(volume))
+
+def apply_clahe(volume):
+    """Aplica CLAHE a cada fatia do volume."""
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    processed = np.zeros_like(volume)
+    for i in range(volume.shape[0]):
+        processed[i] = clahe.apply(np.uint8(volume[i] * 255)) / 255.0
+    return processed
+
+def load_kaggle_data(input_folder=OUTPUT_PATH+'kaggled4D', strategy=3, clahe=True, target_shape=TARGET_SHAPE):
+    processed_volumes = []
     
-    def generator():
-        for file_path in file_paths:
-            volume = load_nifti(file_path)
-            aug_1 = data_augmentation(volume)
-            aug_2 = data_augmentation(volume)
-            yield aug_1, aug_2
+    for file in os.listdir(input_folder):
+        if file.endswith(".nii"):
+            file_path = os.path.join(input_folder, file)
+            volume_4d = load_nifti(file_path)
+            frames_3d = extract_3d_frames(volume_4d, strategy)
+            
+            for frame in frames_3d:
+                normalized = normalize(frame)
+                normalized = pad_or_crop_volume(normalized, target_shape)
+                if clahe:
+                    normalized = apply_clahe(normalized)
+                normalized = np.repeat(normalized[..., np.newaxis], 1, axis=-1)    
+                processed_volumes.append(normalized)
     
-    dataset = tf.data.Dataset.from_generator(generator, output_signature=(
-        tf.TensorSpec(shape=(None, None, None, 1), dtype=tf.float32),
-        tf.TensorSpec(shape=(None, None, None, 1), dtype=tf.float32)
-    ))
-    
-    dataset = dataset.batch(batch_size).prefetch(tf.data.AUTOTUNE)
-    return dataset
+    return np.array(processed_volumes)
