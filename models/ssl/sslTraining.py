@@ -1,4 +1,4 @@
-from Classification3D.models.ssl.simCLR import create_encoder, create_projection_head, SimCLR, get_augmentations
+from Classification3D.models.ssl.simCLR import create_encoder_cnn, create_projection_head, SimCLR, get_augmentations, create_encoder_resnet
 from Classification3D.preprocessing.loadKaggle import load_kaggle_data
 from Classification3D.utils import OUTPUT_PATH, WEIGHT_PATH
 from keras.optimizers import Adam
@@ -21,12 +21,12 @@ def prepare_simclr_data(volumes, augmentations):
     )
 
 # Instancia o encoder e o modelo SimCLR
-encoder = create_encoder()
+encoder = create_encoder_resnet()
 projection_head = create_projection_head()
 model = SimCLR(encoder, projection_head)
 
 # Compila o modelo
-optimizer = Adam(learning_rate=1e-3)
+optimizer = Adam(learning_rate=1e-4)
 model.compile(optimizer)
 
 reduce_lr = ReduceLROnPlateau(
@@ -39,7 +39,7 @@ reduce_lr = ReduceLROnPlateau(
 
 
 # Carrega os volumes do Kaggle
-volumes = load_kaggle_data()
+volumes = load_kaggle_data(strategy=11)
 
 # Divide os volumes em treino e validação
 train_volumes, val_volumes = train_test_split(volumes, test_size=0.2, random_state=42)
@@ -49,7 +49,7 @@ train_data = prepare_simclr_data(train_volumes, augmentations)
 
 # Treina o SimCLR
 model.fit(
-    train_data.batch(16),
+    train_data.batch(6),
     epochs=60,
     callbacks=[reduce_lr]      # Adiciona o callback aqui
 )

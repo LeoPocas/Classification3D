@@ -1,8 +1,8 @@
 import tensorflow as tf
-from keras.layers import Input
+from keras.layers import Input, MaxPooling3D, BatchNormalization, Conv3D, GlobalAveragePooling3D, Dense, RandomFlip, RandomRotation, RandomZoom
 from keras.models import Model, Sequential
-from tensorflow.keras import layers
 from Classification3D.utils import *
+from Classification3D.models.residual_block import residual_block_3d
 
 input_shape = TARGET_SHAPE
 projection_dim = 128
@@ -43,30 +43,45 @@ def nt_xent_loss(z_i, z_j, temperature=0.1):
 
 def get_augmentations():
     return Sequential([
-        layers.RandomFlip("horizontal"),
-        layers.RandomRotation(0.1),
-        layers.RandomZoom(0.1),
+        RandomFlip("horizontal"),
+        RandomRotation(0.1),
+        RandomZoom(0.1),
     ])
 
 # Encoder 3D baseado no Med3D
-def create_encoder():
+def create_encoder_cnn():
     inputs = Input(shape=(*input_shape, 1), name='image_input')
-    x = layers.Conv3D(64, kernel_size=3, padding='same', activation='relu')(inputs)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling3D(pool_size=2)(x)
-    x = layers.Conv3D(128, kernel_size=3, padding='same', activation='relu')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.MaxPooling3D(pool_size=2)(x)
-    x = layers.Conv3D(256, kernel_size=3, padding='same', activation='relu')(x)
-    x = layers.BatchNormalization()(x)
-    x = layers.GlobalAveragePooling3D()(x)
+    x = Conv3D(64, kernel_size=3, padding='same', activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = MaxPooling3D(pool_size=2)(x)
+    x = Conv3D(128, kernel_size=3, padding='same', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = MaxPooling3D(pool_size=2)(x)
+    x = Conv3D(256, kernel_size=3, padding='same', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = GlobalAveragePooling3D()(x)
+    return Model(inputs, x, name="encoder")
+
+def create_encoder_resnet():
+    inputs = Input(shape=(*input_shape, 1), name='image_input')
+    x = Conv3D(64, kernel_size=3, padding='same', activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = residual_block_3d(x, filters=64)
+    x = MaxPooling3D(pool_size=2)(x)
+    
+    x = residual_block_3d(x, filters=128)
+    x = MaxPooling3D(pool_size=2)(x)
+    
+    x = residual_block_3d(x, filters=256)
+    x = GlobalAveragePooling3D()(x)
+    
     return Model(inputs, x, name="encoder")
 
 # Projeção
 def create_projection_head():
     inputs = Input(shape=(256,))
-    x = layers.Dense(256, activation="relu")(inputs)
-    x = layers.Dense(projection_dim)(x)
+    x = Dense(256, activation="relu")(inputs)
+    x = Dense(projection_dim)(x)
     return Model(inputs, x, name="projection_head")
 
 # Construção do modelo SimCLR

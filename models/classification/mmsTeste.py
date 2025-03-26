@@ -1,17 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
-from Classification3D.models.classification.models import build_med3d
+from Classification3D.models.classification.models import build_med3d, build_med3d_with_ssl
 from Classification3D.utils import *
 from Classification3D.models.loss import combined_loss
 from Classification3D.preprocessing.load_mms import load_mms_data
 from keras.optimizers import Adam
 
-model = build_med3d()
+# model = build_med3d()
+model = build_med3d_with_ssl()
 
 model.load_weights(WEIGHT_PATH + 'mms_resnet.weights.keras')
 
-optimizer = Adam(learning_rate=0.01)
+optimizer = Adam(learning_rate=0.001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # test_images, test_labels = load_4d_roi_sep(ACDC_TESTING_PATH)

@@ -10,7 +10,7 @@ def load_nifti(file_path):
     volume_4d = nii_img.get_fdata()
     return volume_4d
 
-def extract_3d_frames(volume_4d, strategy='all'):
+def extract_3d_frames(volume_4d, strategy):
     """
     Converte um volume 4D para 3D.
     Estratégias:

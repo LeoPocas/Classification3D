@@ -94,13 +94,13 @@ x_train_img, x_val_img, y_train, y_val, x_train_meta, x_val_meta = train_test_sp
 model = build_med3d_with_ssl()
 
 # Compilar o modelo
-optimizer = Adam(learning_rate=0.003)
+optimizer = Adam(learning_rate=0.001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Configurar callbacks
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "mms_resnet.weights.keras", save_best_only=True, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=4, min_lr=1e-6),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.6, patience=5, min_lr=5e-6),
     ConfusionMatrixCallback(validation_data=(x_val_img, x_val_meta, y_val), batch_size=10)
 ]
 
@@ -117,7 +117,7 @@ history = model.fit(
     {'image_input': x_train_img, 'metadata_input': x_train_meta},
     y_train,
     validation_data=({'image_input': x_val_img, 'metadata_input': x_val_meta}, y_val),
-    epochs=100, batch_size=20,
+    epochs=60, batch_size=6,
     callbacks=callbacks,
     verbose=2
 )

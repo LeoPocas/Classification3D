@@ -1,10 +1,10 @@
 import numpy as np
 from keras.layers import Input, Conv3D, GlobalAveragePooling3D, GlobalMaxPooling3D, Dense, MaxPooling3D, BatchNormalization, Dropout, add, concatenate, LeakyReLU, Reshape, Multiply, ReLU, Flatten
-from keras.models import Model, Sequential
+from keras.models import Model
 from keras.regularizers import l2
-from keras.activations import relu
 from scipy.ndimage import zoom
-from Classification3D.models.ssl.simCLR import create_encoder
+from Classification3D.models.ssl.simCLR import create_encoder_cnn, create_encoder_resnet
+from Classification3D.models.residual_block import residual_block, residual_block_3d
 from Classification3D.utils import WEIGHT_PATH
 
 from ...utils import TARGET_SHAPE, NUM_CLASSES
@@ -22,22 +22,6 @@ def pad_or_crop_volume(volume, target_shape):
     slices = [slice(c[0], -c[1] if c[1] > 0 else None) for c in cropping]
     volume_cropped = volume_padded[slices[0], slices[1], slices[2]]
     return volume_cropped
-
-def residual_block(x, filters, kernel_size=3, strides=1):
-    shortcut = x
-    x = Conv3D(filters, kernel_size, padding='same', strides=strides, kernel_regularizer=l2(1e-4))(x)
-    x = BatchNormalization()(x)
-    x = relu(x)
-    x = Conv3D(filters, kernel_size, padding='same', kernel_regularizer=l2(1e-4))(x)
-    x = BatchNormalization()(x)
-    
-    if strides > 1 or x.shape[-1] != shortcut.shape[-1]:
-        shortcut = Conv3D(filters, 1, padding='same', strides=strides, kernel_regularizer=l2(1e-4))(shortcut)
-        shortcut = BatchNormalization()(shortcut)
-
-    x = add([x, shortcut])
-    x = relu(x)
-    return x
 
 def attention_block(input_tensor):
     se = GlobalAveragePooling3D()(input_tensor)
@@ -90,19 +74,6 @@ def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     return model
 
-def residual_block_3d(input_tensor, filters, kernel_size=2):
-    x = Conv3D(filters, kernel_size, padding='same', activation='relu', kernel_initializer='he_normal')(input_tensor)
-    x = BatchNormalization()(x)
-    x = Conv3D(filters, kernel_size, padding='same', kernel_initializer='he_normal')(x)
-    x = BatchNormalization()(x)
-    
-    shortcut = Conv3D(filters, kernel_size=1, padding='same')(input_tensor)
-    shortcut = BatchNormalization()(shortcut)
-
-    x = add([x, shortcut])
-    x = ReLU()(x)
-    x = Dropout(0.15)(x)
-    return x
 
 def build_med3d(input_shape=TARGET_SHAPE, num_classes=4): 
     #ResNet: Residual Network, ela ajuda a não termos perda elevada no gradiente utilizando skip connections
@@ -209,13 +180,17 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
                   outputs=outputs)
     return model
 
-def build_med3d_with_ssl(input_shape=TARGET_SHAPE, num_classes=4, encoder_weights=WEIGHT_PATH+"encoder_ssl.weights.h5", trainable=False):
+def build_med3d_with_ssl(encoder=create_encoder_resnet(),input_shape=TARGET_SHAPE, num_classes=4, encoder_weights=WEIGHT_PATH+"encoder_ssl.weights.h5", trainable=False):
     # Carrega o encoder pré-treinado
-    encoder = create_encoder()  # Usa a mesma função do SimCLR
     encoder.load_weights(encoder_weights)  # Carrega os pesos treinados
 
-    # Define se o encoder será treinável ou congelado
-    encoder.trainable = trainable
+    # for layer in encoder.layers[:-1]:  # Exclui a última camada
+    #     layer.trainable = False
+
+    # Descongela apenas a última camada
+    encoder.layers[-1].trainable = True
+    encoder.layers[-2].trainable = True
+    encoder.layers[-3].trainable = True
 
     # Entrada para as imagens
     inputs = Input(shape=(*input_shape, 1), name='image_input')
