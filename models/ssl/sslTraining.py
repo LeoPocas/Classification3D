@@ -4,8 +4,10 @@ from Classification3D.utils import OUTPUT_PATH, WEIGHT_PATH
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ReduceLROnPlateau
+from keras.callbacks import TensorBoard
 import numpy as np
 import tensorflow as tf
+
 
 # Cria pares de imagens aumentadas
 def prepare_simclr_data(volumes, augmentations):
@@ -46,12 +48,12 @@ train_volumes, val_volumes = train_test_split(volumes, test_size=0.2, random_sta
 
 augmentations = get_augmentations()  # Usa a função de augmentations
 train_data = prepare_simclr_data(train_volumes, augmentations)
-
+tensorboard_callback = TensorBoard(log_dir=OUTPUT_PATH + 'tensorboard_logs/', histogram_freq=1)
 # Treina o SimCLR
 model.fit(
     train_data.batch(6),
     epochs=60,
-    callbacks=[reduce_lr]      # Adiciona o callback aqui
+    callbacks=[reduce_lr, tensorboard_callback]      # Adiciona o callback aqui
 )
 
 # Salva os pesos do encoder após o treinamento SSL

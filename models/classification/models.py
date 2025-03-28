@@ -4,7 +4,7 @@ from keras.models import Model
 from keras.regularizers import l2
 from scipy.ndimage import zoom
 from Classification3D.models.ssl.simCLR import create_encoder_cnn, create_encoder_resnet
-from Classification3D.models.residual_block import residual_block, residual_block_3d
+from Classification3D.models.residual_block import residual_block
 from Classification3D.utils import WEIGHT_PATH
 
 from ...utils import TARGET_SHAPE, NUM_CLASSES
@@ -74,6 +74,19 @@ def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     return model
 
+def residual_block_3d(input_tensor, filters, kernel_size=2):
+    x = Conv3D(filters, kernel_size, padding='same', activation='relu', kernel_initializer='he_normal')(input_tensor)
+    x = BatchNormalization()(x)
+    x = Conv3D(filters, kernel_size, padding='same', kernel_initializer='he_normal')(x)
+    x = BatchNormalization()(x)
+    
+    shortcut = Conv3D(filters, kernel_size=1, padding='same')(input_tensor)
+    shortcut = BatchNormalization()(shortcut)
+
+    x = add([x, shortcut])
+    x = ReLU()(x)
+    x = Dropout(0.05)(x)
+    return x
 
 def build_med3d(input_shape=TARGET_SHAPE, num_classes=4): 
     #ResNet: Residual Network, ela ajuda a não termos perda elevada no gradiente utilizando skip connections

@@ -33,7 +33,7 @@ def load_4d_and_extract_3d_volumes(data_dir=ACDC_TRAINING_PATH, label_mapping=LA
             if filename.endswith('.nii.gz') and '4d' in filename and 'gt' not in filename:
                 nii_path = os.path.join(patient_path, filename)
                 ni_img = nib.load(nii_path)
-                data_4d = ni_img.get_fdata().astype(np.uint16)
+                data_4d = ni_img.get_fdata()
 
                 # Extração dos volumes 3D
                 for t in range(data_4d.shape[3]):
@@ -171,7 +171,7 @@ def load_4d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
             if filename.endswith('.nii.gz') and '4d' in filename and 'gt' not in filename:
                 nii_path = os.path.join(patient_path, filename)
                 ni_img = nib.load(nii_path)
-                data_4d = ni_img.get_fdata().astype(np.uint16)
+                data_4d = ni_img.get_fdata()
                 voxel_size = ni_img.header.get_zooms()[0:2]
                 data_4d = np.transpose(data_4d, [3, 2, 0, 1])
                 # Extração das ROIs e cálculo das dimensões
@@ -225,7 +225,7 @@ def load_3d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
             if filename.endswith('.nii.gz') and '4d' in filename and 'gt' not in filename:
                 nii_path = os.path.join(patient_path, filename)
                 ni_img = nib.load(nii_path)
-                data_4d = ni_img.get_fdata().astype(np.uint16)
+                data_4d = ni_img.get_fdata()
                 voxel_size = ni_img.header.get_zooms()[0:2]
                 data_4d = np.transpose(data_4d, [3, 2, 0, 1])
                 # Extração das ROIs e cálculo das dimensões

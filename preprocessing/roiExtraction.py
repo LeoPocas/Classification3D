@@ -40,6 +40,11 @@ def get_binary_mask(img4D,voxel_size):
     _, labels_im = cv2.connectedComponents(np.uint8(bin_img2))
     unique, counts = np.unique(labels_im, return_counts=True)
     counts[0] = 0
+    if len(unique) > 1:
+        max_label = unique[np.argmax(counts)]
+    else:
+        print("Nenhuma região conectada detectada!")
+    
     bin_img2[labels_im != unique[np.argmax(counts)]] = 0
     
     bin_img2 = binary_dilation(bin_img2,np.array([[0,1,0],[1,1,1],[0,1,0]]),iterations=int(10/voxel_size[0]))
