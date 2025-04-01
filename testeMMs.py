@@ -5,16 +5,18 @@ import nibabel as nib
 from utils import OUTPUT_PATH
 from scipy.ndimage import zoom
 from Classification3D.preprocessing.load_mms import load_mms_data, load_mms_data_pure
+from Classification3D.preprocessing.equalizacao import apply_clahe, pad_or_crop_volume
+from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 from Classification3D.utils import *
 
-path_nii = OUTPUT_PATH + 'mms_resampled/Training/B8J7R4/B8J7R4_sa.nii.gz'
-path_nii2 = MMs_PATH + 'Training/Labeled/B8J7R4/B8J7R4_sa.nii.gz'
+path_nii2 = OUTPUT_PATH + 'mms_resampled/Training/B8J7R4/B8J7R4_sa.nii.gz'
+path_nii = MMs_PATH + 'Training/Labeled/B8J7R4/B8J7R4_sa.nii.gz'
 matplotlib.use('Agg')  # Força o uso do backend 'Agg'
 
 ni_img = nib.load(path_nii)
 print(ni_img.shape)
 
-img4D = ni_img.get_fdata()
+img4D = ni_img.get_fdata().astype(np.float64)
 voxel_size = ni_img.header.get_zooms()[0:3]
 
 ni_img2 = nib.load(path_nii2)
@@ -22,8 +24,41 @@ voxel_size2 = ni_img2.header.get_zooms()[0:3]
 
 print(voxel_size, voxel_size2)
 data = ni_img.get_fdata()
-# affine = ni_img.affine
-# header = ni_img.header
+# voxel_size = ni_img.header.get_zooms()[0:2]
+
+img4D = np.transpose(img4D,[3,2,0,1])
+
+
+rect1,rect2 = get_ROI_distance_transform(img4D,voxel_size, 1.0)
+
+img4D_ROI = img4D[:,:,rect1[0]:rect2[0],rect1[1]:rect2[1]]
+
+# img4D_ROI = pad_or_crop_volume(img4D_ROI.shape[3], (128,128,16))
+img4D_ROI = np.transpose(img4D_ROI, [2, 3, 1, 0])
+print(img4D_ROI.shape)
+for t in range(img4D_ROI.shape[3]):                    
+    if t == 1:
+        volume_3d_ED = img4D_ROI[:, :, :, t]
+        volume_3d_ED = apply_clahe(volume_3d_ED)
+        volume_3d_ED = pad_or_crop_volume(volume_3d_ED, TARGET_SHAPE)
+        volume_3d_ED = np.repeat(volume_3d_ED[..., np.newaxis], 1, axis=-1)
+    elif t == 9:
+        volume_3d_ES = img4D_ROI[:, :, :, t]
+        volume_3d_ES = apply_clahe(volume_3d_ES)
+        volume_3d_ES = pad_or_crop_volume(volume_3d_ES, TARGET_SHAPE)
+        volume_3d_ES = np.repeat(volume_3d_ES[..., np.newaxis], 1, axis=-1)
+
+# plt.subplot(233)
+# plt.imshow(img4D_ROI[:,:, 4, 9], cmap='gray')
+# # plt.subplot(234)
+# # plt.imshow(img4D_ROI[:,:, 4, 1], cmap='gray')
+# # plt.subplot(231)
+# # plt.imshow(volume_3d_ED[:,:,4,0], cmap='gray')
+# plt.subplot(232)
+# plt.imshow(volume_3d_ES[:,:,4,0], cmap='gray')
+# plt.savefig("Clahes.png")
+affine = ni_img.affine
+header = ni_img.header
 
 # current_spacing = header.get_zooms()
 # print(current_spacing)
@@ -64,7 +99,7 @@ plt.tight_layout()
 plt.savefig(OUTPUT_PATH+'comparacao_volumes.png', dpi=300)
 plt.close()
 
-volumes, label, patient = load_mms_data_pure(training=False)
+volumes, label, patient = load_mms_data(training=False)
 
 
 # # Verificar o shape do primeiro volume

@@ -10,7 +10,7 @@ from keras.optimizers import Adam
 model = build_med3d()
 # model = build_med3d_with_ssl()
 
-model.load_weights(WEIGHT_PATH + 'mms_resnet.weights.67acc.soVolume.keras')
+model.load_weights(WEIGHT_PATH + 'mms_resnet.s.weights.keras')
 
 optimizer = Adam(learning_rate=0.1)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])

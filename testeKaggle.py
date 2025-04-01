@@ -8,6 +8,7 @@ path_nii = './output/kaggled4D/128_4d.nii'
 matplotlib.use('Agg')  # Força o uso do backend 'Agg'
 
 ni_img = nib.load(path_nii)
+print(ni_img.get_fdata().dtype)
 img4D = ni_img.get_fdata().astype(np.uint16)
 ni_plot = img4D
 voxel_size = ni_img.header.get_zooms()[0:2]

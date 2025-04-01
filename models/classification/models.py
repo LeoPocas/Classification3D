@@ -7,7 +7,7 @@ from Classification3D.models.ssl.simCLR import create_encoder_cnn, create_encode
 from Classification3D.models.residual_block import residual_block, residual_block_3d
 from Classification3D.utils import WEIGHT_PATH
 
-from ...utils import TARGET_SHAPE, NUM_CLASSES
+from ...utils import TARGET_SHAPE, NUM_CLASSES, NUM_CLASSES_MMS
 
 def resize_volume(volume, target_shape):
     scale_factors = [target_dim / input_dim for target_dim, input_dim in zip(target_shape, volume.shape)]
@@ -74,7 +74,7 @@ def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     return model
 
-def build_med3d(input_shape=TARGET_SHAPE, num_classes=4): 
+def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS): 
     #ResNet: Residual Network, ela ajuda a não termos perda elevada no gradiente utilizando skip connections
     inputs = Input(shape=(*input_shape, 1), name='image_input')
     # Initial Convolution

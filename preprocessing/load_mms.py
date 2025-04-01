@@ -7,108 +7,6 @@ from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transf
 from Classification3D.preprocessing.equalizacao import *
 from Classification3D.utils import *
 
-def load_mms_data_pure(training = True, data_dir=MMs_PATH, csv_path=CSV_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING_MMS, zoom_factor=ZOOM):
-    volumes = []
-    labels = []
-    patient_data = []
-
-    # Leitura do arquivo CSV
-    patient_info = {}
-    with open(csv_path, 'r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        for row in csv_reader:
-            patient_id = row['External code']
-            pathology = row['Pathology']
-            weight = float(row['Weight']) if row['Weight'] else None
-            sex = 0 if row['Sex'] == 'M' else 1 if row['Sex'] == 'F' else None  # Converte sexo para numérico
-            age = float(row['Age']) if row['Age'] else None
-            label = label_mapping.get(pathology, 0)
-            ed = float(row['ED']) if row['ED'] else None
-            es = float(row['ES']) if row['ES'] else None
-            patient_info[patient_id] = {
-                'label': label,
-                'weight': weight,
-                'sex': sex,
-                'age': age,
-                'ed': ed,
-                'es': es
-            }
-
-    if training:
-        print("training:", training)
-        folders = ['Training/Labeled', 'Training/Unlabeled', 'Validation']
-    else: 
-        folders = ['Testing']
-        print("training:", training)
-    print(folders)
-    for folder in folders:
-        folder_path = os.path.join(data_dir, folder)
-        if not os.path.exists(folder_path):
-            print(f"Atenção: A pasta {folder} não existe em {data_dir}.")
-            continue
-
-        for patient_id in os.listdir(folder_path):
-            patient_path = os.path.join(folder_path, patient_id)
-
-            if patient_id not in patient_info:
-                print(f"Atenção: Dados do paciente {patient_id} não encontrados no CSV.")
-                continue
-
-            label = patient_info[patient_id]['label']
-            weight = patient_info[patient_id]['weight']
-            sex = patient_info[patient_id]['sex']
-            age = patient_info[patient_id]['age']
-            EndD = patient_info[patient_id]['ed']
-            EndS = patient_info[patient_id]['es']
-
-            for filename in os.listdir(patient_path):
-                if filename.endswith('.nii.gz') and 'gt' not in filename:  # Ignorar os rótulos, processar só as imagens
-                    nii_path = os.path.join(patient_path, filename)
-                    ni_img = nib.load(nii_path)
-                    data_4d = ni_img.get_fdata().astype(np.uint8)
-                    voxel_size = ni_img.header.get_zooms()[:2]
-                    data_4d = np.transpose(data_4d, [3, 2, 0, 1])
-                    
-                    # Extração das ROIs e cálculo das dimensões
-                    rect1, rect2 = get_ROI_distance_transform(data_4d, voxel_size, zoom_factor)
-                    img4D_ROI = data_4d[:, :, rect1[0]:rect2[0], rect1[1]:rect2[1]]
-                    img4D_ROI = np.transpose(img4D_ROI, [2, 3, 1, 0])
-
-                    # Extração dos volumes 3D
-                    for t in range(img4D_ROI.shape[3]):                    
-                        if t == EndD:
-                            volume_3d_ED = img4D_ROI[:, :, :, t]
-                            volume_3d_ED = apply_clahe(volume_3d_ED)
-                            # volume_3d_ED = (volume_3d_ED - np.min(volume_3d_ED)) / (np.max(volume_3d_ED) - np.min(volume_3d_ED))  
-                            volume_3d_ED = pad_or_crop_volume(volume_3d_ED, target_shape)
-                            volume_3d_ED = np.repeat(volume_3d_ED[..., np.newaxis], 1, axis=-1)
-                            volumes.append(volume_3d_ED)
-                            labels.append(label)
-                            weight = float(weight) if weight is not None else 0.0
-                            sex = float(sex) if sex is not None else 0.0
-                            age = float(age) if age is not None else 0.0
-                            patient_data.append([weight, sex, age])
-                            
-                        elif t == EndS:
-                            volume_3d_ES = img4D_ROI[:, :, :, t]
-                            volume_3d_ES = apply_clahe(volume_3d_ES)
-                            # volume_3d_ES = (volume_3d_ES - np.min(volume_3d_ES)) / (np.max(volume_3d_ES) - np.min(volume_3d_ES))  
-                            volume_3d_ES = pad_or_crop_volume(volume_3d_ES, target_shape)
-                            volume_3d_ES = np.repeat(volume_3d_ES[..., np.newaxis], 1, axis=-1)
-                            volumes.append(volume_3d_ES)
-                            labels.append(label)
-                            weight = float(weight) if weight is not None else 0.0
-                            sex = float(sex) if sex is not None else 0.0
-                            age = float(age) if age is not None else 0.0
-                            patient_data.append([weight, sex, age])
-
-    # Conversão para arrays numpy
-    volumes = np.array(volumes)
-    labels = to_categorical(np.array(labels), num_classes=len(label_mapping))
-    patient_data = np.array(patient_data)
-
-    return volumes, labels, patient_data
-
 def load_mms_data(training = True, data_dir=MMs_REESPACADO, csv_path=CSV_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING_MMS, zoom_factor=ZOOM):
     volumes = []
     labels = []
@@ -124,7 +22,7 @@ def load_mms_data(training = True, data_dir=MMs_REESPACADO, csv_path=CSV_PATH, t
             weight = float(row['Weight']) if row['Weight'] else None
             sex = 0 if row['Sex'] == 'M' else 1 if row['Sex'] == 'F' else None  # Converte sexo para numérico
             age = float(row['Age']) if row['Age'] else None
-            label = label_mapping.get(pathology, 0)
+            label = label_mapping.get(pathology, -1)
             ed = float(row['ED']) if row['ED'] else None
             es = float(row['ES']) if row['ES'] else None
             patient_info[patient_id] = {
