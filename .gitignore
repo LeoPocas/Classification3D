@@ -9,10 +9,11 @@ __pycache__/
 *.zip
 ACDC/ 
 acdc.py
-teste.py
+teste
 OpenDataset*
 kaggle
 output/
+Datasets/
 
 # C extensions
 *.so
