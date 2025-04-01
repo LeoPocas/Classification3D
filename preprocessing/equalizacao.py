@@ -3,13 +3,21 @@ import numpy as np
 from Classification3D.utils import CLIP, GRID
 
 def apply_clahe(volume, clip_limit=CLIP, tile_grid_size=GRID):
-    # Aplica CLAHE em cada slice do volume
+    # Normaliza e escala o volume para uint8
+    volume_normalized = (volume - volume.min()) / (volume.max() - volume.min())
+    volume_scaled = (volume_normalized * 255).astype(np.uint8)
+
+    # Cria o CLAHE
     clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+
+    # Aplica CLAHE em cada slice do volume
     enhanced_slices = []
-    for i in range(volume.shape[2]):
-        slice_2d = volume[:, :, i].astype(np.uint8)
+    for i in range(volume_scaled.shape[2]):
+        slice_2d = volume_scaled[:, :, i]  # Já está em uint8
         enhanced_slice = clahe.apply(slice_2d)
         enhanced_slices.append(enhanced_slice)
+
+    # Retorna o volume processado
     return np.stack(enhanced_slices, axis=-1)
 
 

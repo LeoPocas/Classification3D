@@ -1,9 +1,8 @@
 import os
 import numpy as np
 import nibabel as nib
-import cv2
 from Classification3D.preprocessing.equalizacao import apply_clahe, pad_or_crop_volume
-from Classification3D.utils import OUTPUT_PATH, TARGET_SHAPE
+from Classification3D.utils import DATASETS_PATH, TARGET_SHAPE
 
 def load_nifti(file_path):
     nii_img = nib.load(file_path)
@@ -30,15 +29,7 @@ def normalize(volume):
     """Normaliza o volume para a faixa [0, 1]."""
     return (volume - np.min(volume)) / (np.max(volume) - np.min(volume))
 
-def apply_clahe(volume):
-    """Aplica CLAHE a cada fatia do volume."""
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    processed = np.zeros_like(volume)
-    for i in range(volume.shape[0]):
-        processed[i] = clahe.apply(np.uint8(volume[i] * 255)) / 255.0
-    return processed
-
-def load_kaggle_data(input_folder=OUTPUT_PATH+'kaggled4D', strategy=3, clahe=True, target_shape=TARGET_SHAPE):
+def load_kaggle_data(input_folder=DATASETS_PATH+'kaggled4D', strategy=3, clahe=True, target_shape=TARGET_SHAPE):
     processed_volumes = []
     
     for file in os.listdir(input_folder):
