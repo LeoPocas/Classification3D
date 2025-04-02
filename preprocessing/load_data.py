@@ -2,7 +2,7 @@ import nibabel as nib
 import numpy as np
 import os
 import re
-from keras.utils import to_categorical
+from tensorflow.keras.utils import to_categorical
 from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 from Classification3D.preprocessing.equalizacao import *
 from Classification3D.utils import *
@@ -197,14 +197,13 @@ def load_4d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
     patient_data = np.array(patient_data)
     return volumes, labels, patient_data
 
-def load_3d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, label_mapping = LABEL_MAPPING, voxel_size=None, zoom_factor=ZOOM):
+def load_3d_roi_sep(data_dir=ACDC_REESPACADO_TRAINING, target_shape=TARGET_SHAPE, label_mapping = LABEL_MAPPING, voxel_size=None, zoom_factor=ZOOM):
     volumes = []
     labels = []
     patient_data = []
 
     for patient_id in os.listdir(data_dir):
         patient_path = os.path.join(data_dir, patient_id)
-
         info_file_path = os.path.join(patient_path, 'Info.cfg')
         with open(info_file_path, 'r') as f:
             info = f.readlines()
@@ -218,8 +217,12 @@ def load_3d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
                 height = float(line.split(':')[1].strip())  # Converta para float
             
         label = label_mapping.get(label, -1)
-
-        target_frames = get_target_frames(patient_path)
+        if(label==-1):
+            continue
+        if data_dir==ACDC_REESPACADO_TRAINING:
+            target_frames = get_target_frames(os.path.join(ACDC_TRAINING_PATH, patient_id))
+        else:
+            target_frames = get_target_frames(os.path.join(ACDC_TESTING_PATH, patient_id))
 
         for filename in os.listdir(patient_path):
             if filename.endswith('.nii.gz') and '4d' in filename and 'gt' not in filename:
@@ -247,7 +250,7 @@ def load_3d_roi_sep(data_dir=ACDC_TRAINING_PATH, target_shape=TARGET_SHAPE, labe
                         patient_data.append([weight, height])
                 
     volumes =  np.array(volumes)
-    labels = to_categorical(np.array(labels), num_classes=NUM_CLASSES)
+    labels = to_categorical(np.array(labels), num_classes=len(label_mapping))
     patient_data = np.array(patient_data)
     return volumes, labels, patient_data
 

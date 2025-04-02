@@ -100,7 +100,7 @@ model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['ac
 # Configurar callbacks
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "mms_resnet.s.weights.keras", save_best_only=True, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.8, patience=5, min_lr=1e-6),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.95, patience=5, min_lr=1e-6),
     ConfusionMatrixCallback(validation_data=(x_val_img, x_val_meta, y_val), batch_size=6)
 ]
 
@@ -117,7 +117,10 @@ history = model.fit(
     {'image_input': x_train_img, 'metadata_input': x_train_meta},
     y_train,
     validation_data=({'image_input': x_val_img, 'metadata_input': x_val_meta}, y_val),
-    epochs=40, batch_size=16,
+    epochs=150, batch_size=16,
+    #ultima execucao houve uma potencial melhora, infelizmente com 
+    # 100 epocas a loss ainda estava instvel, sendo a da ultima epoca inferior a da penultima, 
+    # #tentar aumentar epocas ou olhar a patience lr final 1e-4, 
     callbacks=callbacks,
     verbose=2
 )

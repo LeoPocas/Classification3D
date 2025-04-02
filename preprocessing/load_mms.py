@@ -71,6 +71,9 @@ def load_mms_data(training = True, data_dir=MMs_REESPACADO, csv_path=CSV_PATH, t
             EndD = patient_info[patient_id]['ed']
             EndS = patient_info[patient_id]['es']
             
+            if(label==-1):
+                continue
+            
             for filename in os.listdir(patient_path):
                 if filename.endswith('.nii.gz') and 'gt' not in filename:  # Ignorar os rótulos, processar só as imagens
                     nii_path = os.path.join(patient_path, filename)

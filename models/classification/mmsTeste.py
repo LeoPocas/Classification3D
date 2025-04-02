@@ -4,7 +4,7 @@ from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from Classification3D.models.classification.models import build_med3d, build_med3d_with_ssl
 from Classification3D.utils import *
 from Classification3D.models.loss import combined_loss
-from Classification3D.preprocessing.load_mms import load_mms_data, load_mms_data_pure
+from Classification3D.preprocessing.load_mms import load_mms_data
 from keras.optimizers import Adam
 
 model = build_med3d()
@@ -17,7 +17,7 @@ model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['ac
 
 # test_images, test_labels = load_4d_roi_sep(ACDC_TESTING_PATH)
 # results = model.evaluate(test_images, test_labels, verbose=1)
-test_images, test_labels, test_patient_data = load_mms_data_pure(training=False)
+test_images, test_labels, test_patient_data = load_mms_data(training=False)
 
 print(type(test_images), test_images.dtype)
 print(type(test_patient_data), test_patient_data.dtype)

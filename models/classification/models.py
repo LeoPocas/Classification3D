@@ -95,7 +95,7 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS):
     # x = Conv3D(256, 1, padding='same', kernel_initializer='he_normal')(x)
     x = Flatten()(x)
 
-    metadata_input = Input(shape=(3,), name='metadata_input') 
+    metadata_input = Input(shape=(2,), name='metadata_input') 
     # metadata_x = Dense(8, activation='relu')(metadata_input)  
     # combined = concatenate([x, metadata_x])
 
