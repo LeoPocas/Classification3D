@@ -3,7 +3,7 @@ import os
 LABEL_MAPPING = {'NOR': 0, 'DCM': 1, 'HCM': 2}
 LABEL_MAPPING_MMS = {"NOR": 0, "DCM": 1,"HCM": 2} # Removi AHS pois há apenas um caso valido no dataset"HHD": 1,"ARV": 4, "Other": 0, 
 NUM_CLASSES_MMS = 3
-TARGET_SHAPE = (192, 192, 10)
+TARGET_SHAPE = (192, 192, 12)
 NUM_CLASSES = 3
 MAX_TIME_DIM = 16
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

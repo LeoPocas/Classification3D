@@ -74,9 +74,14 @@ def cnn_3d_model(target_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     
     return model
 
-def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS): 
+def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS, patiente_analysis=False): 
     #ResNet: Residual Network, ela ajuda a não termos perda elevada no gradiente utilizando skip connections
-    inputs = Input(shape=(*input_shape, 1), name='image_input')
+    if patiente_analysis:
+        inputs = Input(shape=(*input_shape, 1), name='image_input')
+        metadata_input = Input(shape=(3,), name='metadata_input') 
+    else: 
+        inputs = Input(shape=(*input_shape, 1))
+
     # Initial Convolution
     x = Conv3D(64, kernel_size=1, padding='same', activation='relu')(inputs)
     x = BatchNormalization()(x)
@@ -95,7 +100,6 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS):
     # x = Conv3D(256, 1, padding='same', kernel_initializer='he_normal')(x)
     x = Flatten()(x)
 
-    metadata_input = Input(shape=(2,), name='metadata_input') 
     # metadata_x = Dense(8, activation='relu')(metadata_input)  
     # combined = concatenate([x, metadata_x])
 
@@ -104,8 +108,10 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS):
     # x = Dropout(0.5)(x)
     outputs = Dense(num_classes, activation='softmax')(x)
 
-    model = Model(inputs={'image_input': inputs, 'metadata_input': metadata_input}, outputs=outputs)
-    
+    if patiente_analysis:
+        model = Model(inputs={'image_input': inputs, 'metadata_input': metadata_input}, outputs=outputs)
+    else:
+        model = Model(inputs=inputs, outputs=outputs)
     return model
 
 def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
