@@ -12,7 +12,7 @@ def residual_block_3d(input_tensor, filters, kernel_size=2):
 
     x = add([x, shortcut])
     x = ReLU()(x)
-    x = Dropout(0.05)(x)
+    # x = Dropout(0.05)(x)
     return x
 
 

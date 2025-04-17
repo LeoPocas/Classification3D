@@ -170,18 +170,18 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     x2 = GlobalAveragePooling3D()(x2)
     x2 = Flatten()(x2)
 
-    metadata_input = Input(shape=(3,), name='metadata_input')
-    metadata_x = Dense(9, activation='relu')(metadata_input)
+    # metadata_input = Input(shape=(3,), name='metadata_input')
+    # metadata_x = Dense(9, activation='relu')(metadata_input)
 
     # Combinação das três entradas
-    combined = concatenate([x1, x2, metadata_x])
+    combined = concatenate([x1, x2])
 
     # Camadas densas finais
     x = Dense(256, activation='relu')(combined)
     outputs = Dense(num_classes, activation='softmax')(x)
 
     # Modelo final
-    model = Model(inputs={'systole_input': systole_input, 'diastole_input': diastole_input, 'metadata_input': metadata_input}, 
+    model = Model(inputs={'systole_input': systole_input, 'diastole_input': diastole_input}, 
                   outputs=outputs)
     return model
 

@@ -4,24 +4,25 @@ from matplotlib import pyplot as plt
 import nibabel as nib
 from utils import OUTPUT_PATH
 from scipy.ndimage import zoom
-from Classification3D.preprocessing.load_mms import load_mms_data, load_mms_data_pure
+from Classification3D.preprocessing.load_mms import load_mms_data
 from Classification3D.preprocessing.equalizacao import apply_clahe, pad_or_crop_volume
 from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 from Classification3D.utils import *
 
-path_nii2 = OUTPUT_PATH + 'mms_resampled/Training/B8J7R4/B8J7R4_sa.nii.gz'
+path_nii2 = MMs_REESPACADO + 'Training/B8J7R4/B8J7R4_sa.nii.gz'
 path_nii = MMs_PATH + 'Training/Labeled/B8J7R4/B8J7R4_sa.nii.gz'
 matplotlib.use('Agg')  # Força o uso do backend 'Agg'
 
 ni_img = nib.load(path_nii)
 print(ni_img.shape)
-
+print(ni_img.header.get_zooms())
 img4D = ni_img.get_fdata().astype(np.float64)
 voxel_size = ni_img.header.get_zooms()[0:3]
 
 ni_img2 = nib.load(path_nii2)
 voxel_size2 = ni_img2.header.get_zooms()[0:3]
-
+print(ni_img2.shape)
+print(ni_img2.header)
 print(voxel_size, voxel_size2)
 data = ni_img.get_fdata()
 # voxel_size = ni_img.header.get_zooms()[0:2]
