@@ -9,6 +9,12 @@ __pycache__/
 *.zip
 ACDC/ 
 
+acdc.py
+testeIncor.py
+teste.py
+testeMMs.py
+testeKaggle.py
+kaggle
 
 OpenDataset*
 output/
