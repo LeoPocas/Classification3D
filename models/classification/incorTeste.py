@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix, classification_report
 from Classification3D.models.classification.models import build_med3d, build_med3d_with_ssl, dualInput_Resnet
 from Classification3D.utils import *
-from Classification3D.models.loss import combined_loss
+# from Classification3D.models.loss import combined_loss
 from Classification3D.preprocessing.loadIncor import load_incor_data, load_incor_dual
 from keras.optimizers import Adam
 
@@ -12,7 +12,7 @@ model = dualInput_Resnet()
 
 # model.load_weights(WEIGHT_PATH + 'incor_resnet.weights.keras')
 model.load_weights(WEIGHT_PATH + 'incor_dual_input.weights.keras')
-optimizer = Adam(learning_rate=0.1)
+optimizer = Adam(learning_rate=0.00035)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # test_images, test_labels = load_incor_data(training=False)

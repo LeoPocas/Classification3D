@@ -1,4 +1,15 @@
 import tensorflow as tf
+import pynvml
+
+pynvml.nvmlInit()
+handle = pynvml.nvmlDeviceGetHandleByIndex(0)  # GPU 0
+info = pynvml.nvmlDeviceGetMemoryInfo(handle)
+
+print(f"Memória total: {info.total / 1024**2:.2f} MB")
+print(f"Memória livre: {info.free / 1024**2:.2f} MB")
+print(f"Memória usada: {info.used / 1024**2:.2f} MB")
+
+pynvml.nvmlShutdown()
 
 # Verifique se a GPU está disponível
 physical_devices = tf.config.list_physical_devices('GPU')

@@ -1,10 +1,10 @@
-import tensorflow as tf
 import numpy as np
+import os
 import gc
 from Classification3D.models.classification.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet, build_med3d_with_ssl
 from Classification3D.preprocessing.loadIncor import load_incor_data, load_incor_dual
 from sklearn.model_selection import train_test_split
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, Callback
 from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import mixed_precision
@@ -15,18 +15,18 @@ from Classification3D.utils import LABEL_MAPPING_MMS, ACDC_REESPACADO_TESTING, W
 mixed_precision.set_global_policy('float32')
 
 # Configuração da GPU (opcional)
-gpus = tf.config.experimental.list_physical_devices('GPU')
-if gpus:
-    try:
-        for gpu in gpus:
-            tf.config.experimental.set_memory_growth(gpu, True)
-            tf.config.experimental.set_virtual_device_configuration(
-                gpu,
-                [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=16096)])
-    except RuntimeError as e:
-        print(e)
+# gpus = tf.config.experimental.list_physical_devices('GPU')
+# if gpus:
+#     try:
+#         for gpu in gpus:
+#             tf.config.experimental.set_memory_growth(gpu, True)
+#             tf.config.experimental.set_virtual_device_configuration(
+#                 gpu,
+#                 [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=15500)])
+#     except RuntimeError as e:
+#         print(e)
 
-# class ConfusionMatrixCallback(tf.keras.callbacks.Callback):
+# class ConfusionMatrixCallback(Callback):
 #     def __init__(self, validation_data, batch_size):
 #         super().__init__()
 #         self.validation_data = validation_data
@@ -43,7 +43,8 @@ if gpus:
         
 #         cr = classification_report(y_true, y_pred_classes, target_names=list(LABEL_MAPPING_MMS.keys()))
 #         print(f"\nRelatório de Classificação após época {epoch + 1}:\n", cr)
-class ConfusionMatrixCallback(tf.keras.callbacks.Callback):
+
+class ConfusionMatrixCallback(Callback):
     def __init__(self, validation_data, batch_size):
         super().__init__()
         self.validation_data = validation_data
@@ -81,15 +82,19 @@ diastole_images = data['diastole']
 # x_train_img, x_val_img, y_train, y_val = train_test_split(
 #     images, labels, test_size=0.2, random_state=37
 # )
+# x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val= train_test_split(
+#     systole_images, diastole_images, labels, test_size=0.2, random_state=37
+# ) Bom
+
 x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val= train_test_split(
-    systole_images, diastole_images, labels, test_size=0.2, random_state=37
+    systole_images, diastole_images, labels, test_size=0.1, random_state=37
 )
 
 # model = build_med3d()
 model = dualInput_Resnet()
 
 # Compilar o modelo
-optimizer = Adam(learning_rate=0.0005)
+optimizer = Adam(learning_rate=0.00035)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # callbacks = [
@@ -100,11 +105,11 @@ model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['ac
 # ]
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "incor_dual_input.weights.keras", save_best_only=True, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.92, patience=4, min_lr=1e-7),
-    EarlyStopping(monitor='val_accuracy', mode='max', baseline=0.99, patience=600, verbose=1, restore_best_weights=True)
+    ReduceLROnPlateau(monitor='val_loss', factor=0.98, patience=5, min_lr=1e-7),
+    EarlyStopping(monitor='val_loss', mode='min', baseline=0.99, patience=600, verbose=1, restore_best_weights=True)
     # ConfusionMatrixCallback(
     #     validation_data=(x_val_systole, x_val_diastole, y_val),  # Adicionar todos os inputs e labels
-    #     batch_size=4
+    #     batch_size=2
     # )
 ]
 
@@ -122,10 +127,12 @@ history = model.fit(
     y_train,
     validation_data=(
     {'systole_input': x_val_systole, 'diastole_input': x_val_diastole}, y_val), 
-    epochs=300, batch_size=3,
+    epochs=400, batch_size=3,
     callbacks=callbacks,
     verbose=2
 )
+# del x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val
+# gc.collect()
 
 # Testar o modelo com os dados de teste
 # test_images, test_labels = load_incor_data(training=False)
