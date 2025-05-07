@@ -87,7 +87,7 @@ print(f"Shape dos labels: {label.shape}")
 
 # Selecionar uma fatia específica do volume para visualização
 # Aqui, escolhemos a primeira profundidade e a primeira fatia de tempo
-fatia_altura_largura = systole_volumes[56, :, :, 5, 0] 
+fatia_altura_largura = systole_volumes[56, :, :, 5, 0]  
 
 # Exibir a fatia selecionada
 plt.imshow(fatia_altura_largura, cmap="gray")

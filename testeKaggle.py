@@ -45,4 +45,4 @@ axarr[1].axis("off")  # Remove eixos para clareza
 
 # Salva a figura como imagem
 plt.savefig(OUTPUT_PATH + "kaggleRoiComparison.jpg", dpi=300)
-print(f"Imagem salva em {OUTPUT_PATH}kaggleRoiComparison.jpg")
+print(f"Imagem salva em {OUTPUT_PATH}kaggleRoiComparison.jpg") 
