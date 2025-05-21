@@ -105,7 +105,7 @@ model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['ac
 # ]
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "incor_dual_input.weights.keras", save_best_only=True, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.98, patience=5, min_lr=1e-7),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.96, patience=5, min_lr=1e-7),
     EarlyStopping(monitor='val_loss', mode='min', baseline=0.99, patience=600, verbose=1, restore_best_weights=True)
     # ConfusionMatrixCallback(
     #     validation_data=(x_val_systole, x_val_diastole, y_val),  # Adicionar todos os inputs e labels
@@ -127,7 +127,7 @@ history = model.fit(
     y_train,
     validation_data=(
     {'systole_input': x_val_systole, 'diastole_input': x_val_diastole}, y_val), 
-    epochs=400, batch_size=3,
+    epochs=300, batch_size=2,
     callbacks=callbacks,
     verbose=2
 )
@@ -156,7 +156,7 @@ results = model.evaluate(
 
 print("Resultados no conjunto de teste:", results)
 
-y_test_pred = model.predict({'systole_input': test_systole, 'diastole_input': test_diastole}, batch_size=6)
+y_test_pred = model.predict({'systole_input': test_systole, 'diastole_input': test_diastole}, batch_size=2)
 y_test_pred_classes = np.argmax(y_test_pred, axis=1)
 y_test_true = np.argmax(test_labels, axis=1)
 

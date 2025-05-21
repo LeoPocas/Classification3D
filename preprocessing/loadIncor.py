@@ -7,7 +7,7 @@ from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transf
 from Classification3D.preprocessing.equalizacao import *
 from Classification3D.utils import *
 
-def get_ED_ES_phase_from_file(patient_id, file_path=INCOR_PATH+'/ED_ES_phases.txt'):
+def get_ED_ES_phase_from_file(patient_id, file_path=INCOR_RESAMPLED_PATH+'/ED_ES_instants.txt'):
     """
     Retorna os valores de ED_phase e ES_phase de um paciente a partir de um arquivo grande.
     
@@ -19,18 +19,21 @@ def get_ED_ES_phase_from_file(patient_id, file_path=INCOR_PATH+'/ED_ES_phases.tx
         # Abrir e ler o arquivo
         with open(file_path, 'r') as file:
             for line in file:
-                # Verificar se a linha contém o ID do paciente
-                if line.startswith(patient_id + ":"):
-                    # Extrair ED_phase e ES_phase
-                    parts = line.split(",")
-                    ed_phase = int(parts[0].split("=")[1].strip())  # Converte para int
-                    es_phase = int(parts[1].split("=")[1].strip())  # Converte para int
+                # Separar os campos da linha
+                parts = line.strip().split(",")
+                if len(parts) != 3:
+                    continue  # Ignora linhas inválidas
+                
+                file_name = parts[0].split('.')[0]
+                ed_phase = int(parts[1].strip())  # Converte para int
+                es_phase = int(parts[2].strip())  # Converte para int
+                if file_name == patient_id:
                     return ed_phase, es_phase
         # Caso o ID não seja encontrado
         return {"error": "ID do paciente não encontrado no arquivo"}
+    
     except Exception as e:
         return {"error": f"Erro ao ler o arquivo: {str(e)}"}
-
 
 def load_incor_data(training = True, data_dir=INCOR_RESAMPLED_PATH, target_shape=TARGET_SHAPE, label_mapping=LABEL_MAPPING_MMS, zoom_factor=ZOOM):
     volumes = []
