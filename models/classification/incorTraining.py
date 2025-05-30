@@ -127,7 +127,7 @@ history = model.fit(
     y_train,
     validation_data=(
     {'systole_input': x_val_systole, 'diastole_input': x_val_diastole}, y_val), 
-    epochs=300, batch_size=2,
+    epochs=300, batch_size=1,
     callbacks=callbacks,
     verbose=2
 )

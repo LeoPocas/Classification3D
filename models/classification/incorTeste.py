@@ -53,7 +53,7 @@ results = model.evaluate(
 
 print("Resultados no conjunto de teste:", results)
 
-y_test_pred = model.predict({'systole_input': test_systole, 'diastole_input': test_diastole}, batch_size=6)
+y_test_pred = model.predict({'systole_input': test_systole, 'diastole_input': test_diastole}, batch_size=1)
 y_test_pred_classes = np.argmax(y_test_pred, axis=1)
 y_test_true = np.argmax(test_labels, axis=1)
 

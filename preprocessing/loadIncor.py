@@ -1,13 +1,14 @@
 import os
+import re
 import csv
 import numpy as np
 import nibabel as nib
-from tensorflow.keras.utils import to_categorical
+from keras.utils import to_categorical
 from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transform
 from Classification3D.preprocessing.equalizacao import *
 from Classification3D.utils import *
 
-def get_ED_ES_phase_from_file(patient_id, file_path=INCOR_RESAMPLED_PATH+'/ED_ES_instants.txt'):
+def get_ED_ES_phase_from_file(patient_id, file_path=OUTPUT_PATH+'ED_ES_instants.txt'):
     """
     Retorna os valores de ED_phase e ES_phase de um paciente a partir de um arquivo grande.
     
@@ -21,12 +22,13 @@ def get_ED_ES_phase_from_file(patient_id, file_path=INCOR_RESAMPLED_PATH+'/ED_ES
             for line in file:
                 # Separar os campos da linha
                 parts = line.strip().split(",")
-                if len(parts) != 3:
-                    continue  # Ignora linhas inválidas
+                ed_phase = int(re.findall(r'\d+', parts[1])[0])
+                es_phase = int(re.findall(r'\d+', parts[2])[0])
+                file_name = parts[0].split(': ')[1]
+
+                # ed_phase = int(parts[1].split(': ')[1].strip())  # Converte para int
+                # es_phase = int(parts[2].split(': ')[1].strip())  # Converte para int
                 
-                file_name = parts[0].split('.')[0]
-                ed_phase = int(parts[1].strip())  # Converte para int
-                es_phase = int(parts[2].strip())  # Converte para int
                 if file_name == patient_id:
                     return ed_phase, es_phase
         # Caso o ID não seja encontrado
