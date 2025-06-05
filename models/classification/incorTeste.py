@@ -1,66 +1,85 @@
+import os
+import gc
 import numpy as np
 import matplotlib.pyplot as plt
-from sklearn.metrics import f1_score, accuracy_score, confusion_matrix, classification_report
-from Classification3D.models.classification.models import build_med3d, build_med3d_with_ssl, dualInput_Resnet
-from Classification3D.utils import *
-# from Classification3D.models.loss import combined_loss
-from Classification3D.preprocessing.loadIncor import load_incor_data, load_incor_dual
+from sklearn.metrics import confusion_matrix, classification_report
+from Classification3D.models.classification.models import dualInput_Resnet
+from Classification3D.utils import WEIGHT_PATH, LABEL_MAPPING_MMS
+from Classification3D.preprocessing.loadIncor import load_incor_dual_with_filenames
 from keras.optimizers import Adam
 
-# model = build_med3d()
 model = dualInput_Resnet()
 
-# model.load_weights(WEIGHT_PATH + 'incor_resnet.weights.keras')
-model.load_weights(WEIGHT_PATH + 'incor_dual_input.weights.keras')
-optimizer = Adam(learning_rate=0.00035)
+# Carregue os pesos do modelo treinado
+model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_loss.weights.keras') # Ou o nome correto dos seus pesos
+if os.path.exists(model_weights_path):
+    model.load_weights(model_weights_path)
+    print(f"Pesos carregados de: {model_weights_path}")
+else:
+    print(f"ERRO: Arquivo de pesos não encontrado em {model_weights_path}")
+    exit()
+
+optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
-# test_images, test_labels = load_incor_data(training=False)
+test_data_dict, test_labels_categorical, test_filenames = load_incor_dual_with_filenames(training=False)
 
-# results = model.evaluate(test_images, test_labels, verbose=1)
+if len(test_filenames) == 0:
+    print("Nenhum dado de teste foi carregado. Verifique o caminho e a estrutura dos dados.")
+    exit()
 
-# print("Resultados no conjunto de teste:", results)
+test_systole_volumes = test_data_dict['systole']
+test_diastole_volumes = test_data_dict['diastole']
 
-# y_test_pred = model.predict(test_images, batch_size=6)
-# y_test_pred_classes = np.argmax(y_test_pred, axis=1)
-# y_test_true = np.argmax(test_labels, axis=1)
+print(f"Número de amostras de teste carregadas: {len(test_filenames)}")
 
-# # Gerar matriz de confusão
-# test_cm = confusion_matrix(y_test_true, y_test_pred_classes)
-# print("\nMatriz de Confusão no conjunto de teste:\n", test_cm)
-
-# # Relatório de classificação
-# test_cr = classification_report(y_test_true, y_test_pred_classes, target_names=list(LABEL_MAPPING_MMS.keys()))
-# print("\nRelatório de Classificação no conjunto de teste:\n", test_cr)
-
-test_data, test_labels = load_incor_dual(training=False) 
-test_systole = test_data['systole']
-test_diastole = test_data['diastole']
-
-# results_train = model.evaluate(x_val_img, y_val, verbose=0)
 results = model.evaluate(
-    {'systole_input': test_systole, 'diastole_input': test_diastole}, 
-    test_labels,
+    {'systole_input': test_systole_volumes, 'diastole_input': test_diastole_volumes},
+    test_labels_categorical,
     verbose=1
 )
+print(f"Resultados da Avaliação no Conjunto de Teste - Perda: {results[0]:.4f}, Acurácia: {results[1]:.4f}")
 
-# print("Resultados do melhor modelo no conjunto de treino:", results_train)
+# --- Previsões e Análise de Erros ---
+print("Fazendo previsões no conjunto de teste...")
+y_test_pred_probs = model.predict(
+    {'systole_input': test_systole_volumes, 'diastole_input': test_diastole_volumes},
+    batch_size=4
+)
 
-# del x_train_img, x_val_img, y_train, y_val
-# gc.collect()
+# Converter probabilidades para classes (índices)
+y_test_pred_classes = np.argmax(y_test_pred_probs, axis=1)
+# Converter rótulos one-hot verdadeiros para classes (índices)
+y_test_true_classes = np.argmax(test_labels_categorical, axis=1)
 
-# results = model.evaluate(test_images, test_labels, verbose=1)
+# Obter nomes das classes do mapeamento para o relatório
+class_names = [name for name, index in sorted(LABEL_MAPPING_MMS.items(), key=lambda item: item[1])]
 
-print("Resultados no conjunto de teste:", results)
+# Matriz de Confusão
+print("\n--- Matriz de Confusão (Conjunto de Teste) ---")
+test_cm = confusion_matrix(y_test_true_classes, y_test_pred_classes)
+print(test_cm)
 
-y_test_pred = model.predict({'systole_input': test_systole, 'diastole_input': test_diastole}, batch_size=1)
-y_test_pred_classes = np.argmax(y_test_pred, axis=1)
-y_test_true = np.argmax(test_labels, axis=1)
+# Relatório de Classificação
+print("\n--- Relatório de Classificação (Conjunto de Teste) ---")
+test_cr = classification_report(y_test_true_classes, y_test_pred_classes, target_names=class_names)
+print(test_cr)
 
-# Gerar matriz de confusão
-test_cm = confusion_matrix(y_test_true, y_test_pred_classes)
-print("\nMatriz de Confusão no conjunto de teste:\n", test_cm)
+# --- Identificar e Listar Arquivos Classificados Incorretamente ---
+print("\n--- Arquivos Classificados Incorretamente (Conjunto de Teste) ---")
+misclassified_count = 0
+for i in range(len(y_test_true_classes)):
+    if y_test_pred_classes[i] != y_test_true_classes[i]:
+        misclassified_count += 1
+        filename = test_filenames[i]
+        true_label_name = class_names[y_test_true_classes[i]]
+        predicted_label_name = class_names[y_test_pred_classes[i]]
+        print(f"Arquivo: {filename}, Rótulo Verdadeiro: {true_label_name}, Rótulo Previsto: {predicted_label_name}")
 
-# Relatório de classificação
-test_cr = classification_report(y_test_true, y_test_pred_classes, target_names=list(LABEL_MAPPING_MMS.keys()))
-print("\nRelatório de Classificação no conjunto de teste:\n", test_cr)
+if misclassified_count == 0:
+    print("Nenhum arquivo foi classificado incorretamente no conjunto de teste. Ótimo trabalho!")
+else:
+    print(f"\nTotal de arquivos classificados incorretamente: {misclassified_count} de {len(test_filenames)}")
+
+del test_systole_volumes, test_diastole_volumes, test_labels_categorical, test_filenames
+gc.collect()
