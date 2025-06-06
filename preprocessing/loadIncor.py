@@ -139,7 +139,7 @@ def load_incor_data_with_filenames(
             label_val = label_mapping['NOR']
         elif status_folder == 'Hipertrófico':
             label_val = label_mapping['HCM']
-        elif status_folder == 'Dilatado':
+        elif status_folder == 'Dilatados':
             label_val = label_mapping['DCM']
         else:
             print(f"Status desconhecido encontrado: {status_folder}. Ignorando.")

@@ -1,85 +1,102 @@
+import numpy as np
 import os
 import gc
-import numpy as np
-import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report
-from Classification3D.models.classification.models import dualInput_Resnet
-from Classification3D.utils import WEIGHT_PATH, LABEL_MAPPING_MMS
-from Classification3D.preprocessing.loadIncor import load_incor_dual_with_filenames
 from keras.optimizers import Adam
+from Classification3D.models.classification.models import build_med3d
+from Classification3D.utils import (
+    LABEL_MAPPING_MMS, WEIGHT_PATH, OUTPUT_PATH, INCOR_RESAMPLED_PATH,
+    TARGET_SHAPE, ZOOM, SPACING
+)
+from Classification3D.preprocessing.loadIncor import load_incor_data_with_filenames
 
-model = dualInput_Resnet()
-
-# Carregue os pesos do modelo treinado
-model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_loss.weights.keras') # Ou o nome correto dos seus pesos
-if os.path.exists(model_weights_path):
-    model.load_weights(model_weights_path)
-    print(f"Pesos carregados de: {model_weights_path}")
-else:
-    print(f"ERRO: Arquivo de pesos não encontrado em {model_weights_path}")
+# 1. Preparar Nomes das Classes e Índices de Rótulos
+if not LABEL_MAPPING_MMS:
+    print("ERRO: LABEL_MAPPING_MMS não está definido ou está vazio. Verifique Classification3D.utils.")
     exit()
+
+class_names_sorted = [name for name, index in sorted(LABEL_MAPPING_MMS.items(), key=lambda item: item[1])]
+report_labels_indices = list(range(len(class_names_sorted)))
+
+# 2. Carregar Dados de Teste
+print("Carregando dados de teste (entrada única)...")
+# Certifique-se que load_incor_data_with_filenames está corretamente definida e importada.
+# Ajuste os parâmetros conforme necessário para sua função.
+test_images, test_labels, test_filenames = load_incor_data_with_filenames(
+    training=False,
+    data_dir=INCOR_RESAMPLED_PATH,
+    target_shape=TARGET_SHAPE,
+    label_mapping=LABEL_MAPPING_MMS,
+    zoom_factor=ZOOM,
+    ed_es_file_path=os.path.join(OUTPUT_PATH,'ED_ES_instants.txt')
+)
+
+if test_images is None or len(test_images) == 0:
+    print("Nenhum dado de teste carregado. Encerrando.")
+    exit()
+else:
+    print(f"Dados de teste carregados: {len(test_images)} amostras.")
+
+# 3. Construir e Carregar Modelo
+model = build_med3d()
+print("Modelo build_med3d construído.")
+
+# model_weights_path = os.path.join(WEIGHT_PATH, "single_input_best_val_accuracy.weights.keras")
+model_weights_path = os.path.join(WEIGHT_PATH, "single_input_best_val_loss.weights.keras")
+
+if not os.path.exists(model_weights_path):
+    print(f"ERRO: Arquivo de pesos não encontrado em {model_weights_path}")
+    print("Certifique-se de que o caminho e o nome do arquivo de pesos estão corretos.")
+    exit()
+
+print(f"Carregando pesos do modelo de: {model_weights_path}")
+model.load_weights(model_weights_path)
 
 optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
-test_data_dict, test_labels_categorical, test_filenames = load_incor_dual_with_filenames(training=False)
+print(f"\nAvaliando o modelo no conjunto de teste ({len(test_images)} amostras)...")
+results = model.evaluate(test_images, test_labels, verbose=1, batch_size=4)
+print(f"Resultados no Conjunto de Teste - Perda: {results[0]:.4f}, Acurácia: {results[1]:.4f}")
 
-if len(test_filenames) == 0:
-    print("Nenhum dado de teste foi carregado. Verifique o caminho e a estrutura dos dados.")
-    exit()
-
-test_systole_volumes = test_data_dict['systole']
-test_diastole_volumes = test_data_dict['diastole']
-
-print(f"Número de amostras de teste carregadas: {len(test_filenames)}")
-
-results = model.evaluate(
-    {'systole_input': test_systole_volumes, 'diastole_input': test_diastole_volumes},
-    test_labels_categorical,
-    verbose=1
-)
-print(f"Resultados da Avaliação no Conjunto de Teste - Perda: {results[0]:.4f}, Acurácia: {results[1]:.4f}")
-
-# --- Previsões e Análise de Erros ---
-print("Fazendo previsões no conjunto de teste...")
-y_test_pred_probs = model.predict(
-    {'systole_input': test_systole_volumes, 'diastole_input': test_diastole_volumes},
-    batch_size=4
-)
-
-# Converter probabilidades para classes (índices)
+print("\nFazendo previsões no conjunto de teste...")
+y_test_pred_probs = model.predict(test_images, batch_size=4)
 y_test_pred_classes = np.argmax(y_test_pred_probs, axis=1)
-# Converter rótulos one-hot verdadeiros para classes (índices)
-y_test_true_classes = np.argmax(test_labels_categorical, axis=1)
+y_test_true_classes = np.argmax(test_labels, axis=1)
 
-# Obter nomes das classes do mapeamento para o relatório
-class_names = [name for name, index in sorted(LABEL_MAPPING_MMS.items(), key=lambda item: item[1])]
-
-# Matriz de Confusão
 print("\n--- Matriz de Confusão (Conjunto de Teste) ---")
-test_cm = confusion_matrix(y_test_true_classes, y_test_pred_classes)
+test_cm = confusion_matrix(y_test_true_classes, y_test_pred_classes, labels=report_labels_indices)
 print(test_cm)
 
-# Relatório de Classificação
 print("\n--- Relatório de Classificação (Conjunto de Teste) ---")
-test_cr = classification_report(y_test_true_classes, y_test_pred_classes, target_names=class_names)
+test_cr = classification_report(
+    y_test_true_classes,
+    y_test_pred_classes,
+    labels=report_labels_indices,
+    target_names=class_names_sorted,
+    zero_division=0
+)
 print(test_cr)
 
-# --- Identificar e Listar Arquivos Classificados Incorretamente ---
-print("\n--- Arquivos Classificados Incorretamente (Conjunto de Teste) ---")
-misclassified_count = 0
-for i in range(len(y_test_true_classes)):
-    if y_test_pred_classes[i] != y_test_true_classes[i]:
-        misclassified_count += 1
-        filename = test_filenames[i]
-        true_label_name = class_names[y_test_true_classes[i]]
-        predicted_label_name = class_names[y_test_pred_classes[i]]
-        print(f"Arquivo: {filename}, Rótulo Verdadeiro: {true_label_name}, Rótulo Previsto: {predicted_label_name}")
+print("\n--- Arquivos de Teste Classificados Incorretamente ---")
+misclassified_test_count = 0
+if test_filenames is not None and len(test_filenames) > 0:
+    for i in range(len(y_test_true_classes)):
+        if y_test_pred_classes[i] != y_test_true_classes[i]:
+            misclassified_test_count += 1
+            filename = test_filenames[i] # Nomes já incluem _ED ou _ES da função de carregamento
+            true_label_name = class_names_sorted[y_test_true_classes[i]] if y_test_true_classes[i] < len(class_names_sorted) else f"Índice_{y_test_true_classes[i]}"
+            predicted_label_name = class_names_sorted[y_test_pred_classes[i]] if y_test_pred_classes[i] < len(class_names_sorted) else f"Índice_{y_test_pred_classes[i]}"
+            print(f"Arquivo: {filename}, Verdadeiro: {true_label_name}, Previsto: {predicted_label_name}")
 
-if misclassified_count == 0:
-    print("Nenhum arquivo foi classificado incorretamente no conjunto de teste. Ótimo trabalho!")
+    if misclassified_test_count == 0:
+        print("Nenhum arquivo de teste classificado incorretamente. Excelente! 🎉")
+    else:
+        print(f"\nTotal de arquivos de teste classificados incorretamente: {misclassified_test_count} de {len(test_filenames)}")
 else:
-    print(f"\nTotal de arquivos classificados incorretamente: {misclassified_count} de {len(test_filenames)}")
+    print("Nenhum nome de arquivo de teste disponível para análise de erros.")
 
-del test_systole_volumes, test_diastole_volumes, test_labels_categorical, test_filenames
+del test_images, test_labels, test_filenames, model
 gc.collect()
+
+print("\n--- Fase de Teste Concluída ---")
