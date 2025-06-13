@@ -3,15 +3,15 @@ import gc
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, classification_report
-from Classification3D.models.classification.models import dualInput_Resnet
-from Classification3D.utils import WEIGHT_PATH, LABEL_MAPPING_MMS
+from Classification3D.models.models import dualInput_Resnet
+from Classification3D.utils import WEIGHT_PATH, LABEL_MAPPING
 from Classification3D.preprocessing.loadIncor import load_incor_dual_with_filenames
 from keras.optimizers import Adam
 
 model = dualInput_Resnet()
 
 # Carregue os pesos do modelo treinado
-model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_accuracy.weights.keras') # Ou o nome correto dos seus pesos
+model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_0.91.weights.keras') # Ou o nome correto dos seus pesos
 if os.path.exists(model_weights_path):
     model.load_weights(model_weights_path)
     print(f"Pesos carregados de: {model_weights_path}")
@@ -53,7 +53,7 @@ y_test_pred_classes = np.argmax(y_test_pred_probs, axis=1)
 y_test_true_classes = np.argmax(test_labels_categorical, axis=1)
 
 # Obter nomes das classes do mapeamento para o relatório
-class_names = [name for name, index in sorted(LABEL_MAPPING_MMS.items(), key=lambda item: item[1])]
+class_names = [name for name, index in sorted(LABEL_MAPPING.items(), key=lambda item: item[1])]
 
 # Matriz de Confusão
 print("\n--- Matriz de Confusão (Conjunto de Teste) ---")

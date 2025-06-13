@@ -3,14 +3,13 @@ import os
 import gc
 from sklearn.metrics import confusion_matrix, classification_report
 from keras.optimizers import Adam
-from Classification3D.models.classification.models import build_med3d
+from Classification3D.models.models import build_med3d
 from Classification3D.utils import (
     LABEL_MAPPING_MMS, WEIGHT_PATH, OUTPUT_PATH, INCOR_RESAMPLED_PATH,
     TARGET_SHAPE, ZOOM, SPACING
 )
 from Classification3D.preprocessing.loadIncor import load_incor_data_with_filenames
 
-# 1. Preparar Nomes das Classes e Índices de Rótulos
 if not LABEL_MAPPING_MMS:
     print("ERRO: LABEL_MAPPING_MMS não está definido ou está vazio. Verifique Classification3D.utils.")
     exit()
@@ -18,10 +17,6 @@ if not LABEL_MAPPING_MMS:
 class_names_sorted = [name for name, index in sorted(LABEL_MAPPING_MMS.items(), key=lambda item: item[1])]
 report_labels_indices = list(range(len(class_names_sorted)))
 
-# 2. Carregar Dados de Teste
-print("Carregando dados de teste (entrada única)...")
-# Certifique-se que load_incor_data_with_filenames está corretamente definida e importada.
-# Ajuste os parâmetros conforme necessário para sua função.
 test_images, test_labels, test_filenames = load_incor_data_with_filenames(
     training=False,
     data_dir=INCOR_RESAMPLED_PATH,
@@ -31,13 +26,6 @@ test_images, test_labels, test_filenames = load_incor_data_with_filenames(
     ed_es_file_path=os.path.join(OUTPUT_PATH,'ED_ES_instants.txt')
 )
 
-if test_images is None or len(test_images) == 0:
-    print("Nenhum dado de teste carregado. Encerrando.")
-    exit()
-else:
-    print(f"Dados de teste carregados: {len(test_images)} amostras.")
-
-# 3. Construir e Carregar Modelo
 model = build_med3d()
 print("Modelo build_med3d construído.")
 

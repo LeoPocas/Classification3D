@@ -1,7 +1,7 @@
 import numpy as np
 import os
 import gc
-from Classification3D.models.classification.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet, build_med3d_with_ssl
+from Classification3D.models.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet, build_med3d_with_ssl
 from Classification3D.preprocessing.loadIncor import load_incor_data, load_incor_dual
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, Callback
@@ -9,7 +9,7 @@ from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import mixed_precision
 from sklearn.preprocessing import StandardScaler
-from Classification3D.utils import LABEL_MAPPING_MMS, ACDC_REESPACADO_TESTING, WEIGHT_PATH
+from Classification3D.utils import LABEL_MAPPING, ACDC_REESPACADO_TESTING, WEIGHT_PATH
 
 # Configuração para usar precisão mista
 mixed_precision.set_global_policy('float32')
@@ -25,24 +25,6 @@ mixed_precision.set_global_policy('float32')
 #                 [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=15500)])
 #     except RuntimeError as e:
 #         print(e)
-
-# class ConfusionMatrixCallback(Callback):
-#     def __init__(self, validation_data, batch_size):
-#         super().__init__()
-#         self.validation_data = validation_data
-#         self.batch_size = batch_size
-
-#     def on_epoch_end(self, epoch, logs=None):
-#         x_val_img, y_val = self.validation_data  # Dados de validação
-#         y_pred = self.model.predict(x_val_img, batch_size=self.batch_size)
-#         y_pred_classes = np.argmax(y_pred, axis=1)
-#         y_true = np.argmax(y_val, axis=1)
-        
-#         cm = confusion_matrix(y_true, y_pred_classes)
-#         print(f"\nMatriz de Confusão após época {epoch + 1}:\n", cm)
-        
-#         cr = classification_report(y_true, y_pred_classes, target_names=list(LABEL_MAPPING_MMS.keys()))
-#         print(f"\nRelatório de Classificação após época {epoch + 1}:\n", cr)
 
 class ConfusionMatrixCallback(Callback):
     def __init__(self, validation_data, batch_size):
@@ -71,7 +53,7 @@ class ConfusionMatrixCallback(Callback):
         print(f"\nMatriz de Confusão após época {epoch + 1}:\n", cm)
         
         # Gerar o relatório de classificação
-        cr = classification_report(y_true, y_pred_classes, target_names=list(LABEL_MAPPING_MMS.keys()))
+        cr = classification_report(y_true, y_pred_classes, target_names=list(LABEL_MAPPING.keys()))
         print(f"\nRelatório de Classificação após época {epoch + 1}:\n", cr)
 
 # images, labels = load_incor_data()
@@ -166,7 +148,7 @@ test_cm = confusion_matrix(y_test_true, y_test_pred_classes)
 print("\nMatriz de Confusão no conjunto de teste:\n", test_cm)
 
 # Relatório de classificação
-test_cr = classification_report(y_test_true, y_test_pred_classes, target_names=list(LABEL_MAPPING_MMS.keys()))
+test_cr = classification_report(y_test_true, y_test_pred_classes, target_names=list(LABEL_MAPPING.keys()))
 print("\nRelatório de Classificação no conjunto de teste:\n", test_cr)
 
 gc.collect()

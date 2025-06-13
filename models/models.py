@@ -5,9 +5,7 @@ from keras.regularizers import l2
 from scipy.ndimage import zoom
 from Classification3D.models.ssl.simCLR import create_encoder_cnn, create_encoder_resnet
 from Classification3D.models.residual_block import residual_block, residual_block_3d
-from Classification3D.utils import WEIGHT_PATH
-
-from ...utils import TARGET_SHAPE, NUM_CLASSES, NUM_CLASSES_MMS
+from Classification3D.utils import WEIGHT_PATH, TARGET_SHAPE, NUM_CLASSES, NUM_CLASSES_MMS
 
 def resize_volume(volume, target_shape):
     scale_factors = [target_dim / input_dim for target_dim, input_dim in zip(target_shape, volume.shape)]
@@ -83,7 +81,7 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS, patiente_
         inputs = Input(shape=(*input_shape, 1))
 
     # Initial Convolution
-    x = Conv3D(64, kernel_size=1, padding='same', activation='relu')(inputs)
+    x = Conv3D(64, kernel_size=2, padding='same', activation='relu')(inputs)
     x = BatchNormalization()(x)
     x = MaxPooling3D(pool_size=2, padding='same')(x)
 
