@@ -34,19 +34,6 @@ def load_mms_data(training = True, data_dir=MMs_REESPACADO, csv_path=CSV_PATH, t
                 'es': es
             }
 
-    # if training:
-    #     print("training:", training)
-    #     folders = ['Training/Labeled', 'Training/Unlabeled', 'Validation']
-    # else: 
-    #     folders = ['Testing']
-    #     print("training:", training)
-    # print(folders)
-    # for folder in folders:
-    #     folder_path = os.path.join(data_dir, folder)
-    #     if not os.path.exists(folder_path):
-    #         print(f"Atenção: A pasta {folder} não existe em {data_dir}.")
-    #         continue  
-
     if training:
         print("training:", training)
         folder = 'Training'
@@ -55,7 +42,6 @@ def load_mms_data(training = True, data_dir=MMs_REESPACADO, csv_path=CSV_PATH, t
         print("training:", training)
     folder_path = os.path.join(data_dir, folder)
 
-    ###1 TAB para o antigo####
     if os.path.exists(folder_path):
         for patient_id in os.listdir(folder_path):
             patient_path = os.path.join(folder_path, patient_id)

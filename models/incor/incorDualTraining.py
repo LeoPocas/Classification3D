@@ -14,18 +14,6 @@ from Classification3D.utils import LABEL_MAPPING, ACDC_REESPACADO_TESTING, WEIGH
 # Configuração para usar precisão mista
 mixed_precision.set_global_policy('float32')
 
-# Configuração da GPU (opcional)
-# gpus = tf.config.experimental.list_physical_devices('GPU')
-# if gpus:
-#     try:
-#         for gpu in gpus:
-#             tf.config.experimental.set_memory_growth(gpu, True)
-#             tf.config.experimental.set_virtual_device_configuration(
-#                 gpu,
-#                 [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=15500)])
-#     except RuntimeError as e:
-#         print(e)
-
 class ConfusionMatrixCallback(Callback):
     def __init__(self, validation_data, batch_size):
         super().__init__()
@@ -61,13 +49,6 @@ data, labels = load_incor_dual()
 systole_images = data['systole']
 diastole_images = data['diastole']
 
-# x_train_img, x_val_img, y_train, y_val = train_test_split(
-#     images, labels, test_size=0.2, random_state=37
-# )
-# x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val= train_test_split(
-#     systole_images, diastole_images, labels, test_size=0.2, random_state=37
-# ) Bom
-
 x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val= train_test_split(
     systole_images, diastole_images, labels, test_size=0.1, random_state=41
 )
@@ -79,16 +60,10 @@ model = dualInput_Resnet()
 optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
-# callbacks = [
-#     ModelCheckpoint(WEIGHT_PATH + "incor_resnet.weights.keras", save_best_only=True, monitor="val_accuracy", mode="max"),
-#     ReduceLROnPlateau(monitor='val_loss', factor=0.99, patience=4, min_lr=5e-7),
-#     ConfusionMatrixCallback(validation_data=(x_val_img, y_val), batch_size=5),
-#     EarlyStopping(monitor='val_accuracy', mode='max', baseline=0.96, patience=600, verbose=1, restore_best_weights=True)  
-# ]
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "incor2_loss.weights.keras", save_best_only=True, monitor="val_loss", mode="min"),
     ModelCheckpoint(WEIGHT_PATH + "incor2_accuracy.weights.keras", save_best_only=True, monitor="val_accuracy", mode="max"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.98, patience=3, min_lr=1e-7),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7),
     EarlyStopping(monitor='val_loss', mode='min', baseline=0.99, patience=600, verbose=1, restore_best_weights=True)
     # ConfusionMatrixCallback(
     #     validation_data=(x_val_systole, x_val_diastole, y_val),  # Adicionar todos os inputs e labels
@@ -96,21 +71,12 @@ callbacks = [
     # )
 ]
 
-# history = model.fit(
-#     x_train_img,
-#     y_train,
-#     validation_data=(x_val_img, y_val),
-#     epochs=500, batch_size=5,
-#     callbacks=callbacks,
-#     verbose=2
-# )
-
 history = model.fit(
     {'systole_input': x_train_systole, 'diastole_input': x_train_diastole}, 
     y_train,
     validation_data=(
     {'systole_input': x_val_systole, 'diastole_input': x_val_diastole}, y_val), 
-    epochs=300, batch_size=10,
+    epochs=300, batch_size=8,
     callbacks=callbacks,
     verbose=2
 )
@@ -127,6 +93,7 @@ test_diastole = test_data['diastole']
 results = model.evaluate(
     {'systole_input': test_systole, 'diastole_input': test_diastole}, 
     test_labels,
+    batch_size=4,
     verbose=1
 )
 

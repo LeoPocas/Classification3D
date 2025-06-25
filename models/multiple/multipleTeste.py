@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix, classification_report
-from Classification3D.models.classification.models import build_med3d, build_med3d_with_ssl
+from Classification3D.models.models import build_med3d, build_med3d_with_ssl
 from Classification3D.utils import *
 from Classification3D.preprocessing.load_mms import load_mms_data
 from Classification3D.preprocessing.load_data import load_3d_roi_sep
@@ -10,7 +10,7 @@ from keras.optimizers import Adam
 
 model = build_med3d()
 
-model.load_weights(WEIGHT_PATH + 'multiple+incor_resnet.weights.keras')
+model.load_weights(WEIGHT_PATH + 'multiple_loss.weights.keras')
 
 optimizer = Adam(learning_rate=0.1)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])

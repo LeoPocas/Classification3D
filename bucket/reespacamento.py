@@ -41,7 +41,7 @@ def resample_and_save_4d(path_nii, output_path):
     resampled_img = nib.Nifti1Image(resampled_data, new_affine, header)
 
     # Salva o arquivo reamostrado no diretório de saída
-    # nib.save(resampled_img, output_path)
+    nib.save(resampled_img, output_path)
     print(f"Arquivo reamostrado salvo em: {output_path}")
 
 # Processa todos os arquivos 4D no diretório

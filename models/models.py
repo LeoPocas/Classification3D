@@ -81,7 +81,7 @@ def build_med3d(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES_MMS, patiente_
         inputs = Input(shape=(*input_shape, 1))
 
     # Initial Convolution
-    x = Conv3D(64, kernel_size=2, padding='same', activation='relu')(inputs)
+    x = Conv3D(64, kernel_size=1, padding='same', activation='relu')(inputs)
     x = BatchNormalization()(x)
     x = MaxPooling3D(pool_size=2, padding='same')(x)
 
@@ -122,19 +122,6 @@ def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     x = BatchNormalization()(x)
     x = Conv3D(64, kernel_size=2, padding='valid', activation='relu')(x)
     x = BatchNormalization()(x)
-    # x = MaxPooling3D(pool_size=(2, 2, 1))(x) 
-
-    # x = Conv3D(128, kernel_size=1, padding='same', activation='relu')(x)
-    # x = BatchNormalization()(x)
-    # x = Conv3D(256, kernel_size=2, padding='same', activation='relu')(x)
-    # x = BatchNormalization()(x)
-    # x = MaxPooling3D(pool_size=(2, 2, 1))(x)
-
-    # x = Conv3D(512, kernel_size=1, padding='same', activation='relu')(x)
-    # x = BatchNormalization()(x)
-    # x = Conv3D(1024, kernel_size=1, padding='same', activation='relu')(x)
-    # x = BatchNormalization()(x)
-    # x = MaxPooling3D(pool_size=(2, 2, 2))(x)
     
     x = Flatten()(x)
     x = Dense(64, activation='relu')(x)

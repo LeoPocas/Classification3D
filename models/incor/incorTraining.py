@@ -98,7 +98,7 @@ callbacks_list = [
         os.path.join(WEIGHT_PATH, "single_input_best_val_loss.weights.keras"),
         save_best_only=True, monitor="val_loss", mode="min", verbose=-1
     ),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=5, min_lr=1e-7, verbose=-1),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7, verbose=-1),
     EarlyStopping(monitor='val_accuracy', mode='max', baseline=0.99, patience=600, verbose=-1, restore_best_weights=True)
     # ConfusionMatrixCallback(
     # validation_data=(x_val_img, y_val, filenames_val),
@@ -113,7 +113,7 @@ history = model.fit(
     y_train,
     validation_data=(x_val_img, y_val),
     epochs=300,
-    batch_size=8,
+    batch_size=16,
     callbacks=callbacks_list,
     verbose=2
 )

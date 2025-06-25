@@ -11,7 +11,7 @@ from keras.optimizers import Adam
 model = dualInput_Resnet()
 
 # Carregue os pesos do modelo treinado
-model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_0.91.weights.keras') # Ou o nome correto dos seus pesos
+model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_accuracy.weights.keras') # Ou o nome correto dos seus pesos
 if os.path.exists(model_weights_path):
     model.load_weights(model_weights_path)
     print(f"Pesos carregados de: {model_weights_path}")
@@ -36,15 +36,14 @@ print(f"Número de amostras de teste carregadas: {len(test_filenames)}")
 results = model.evaluate(
     {'systole_input': test_systole_volumes, 'diastole_input': test_diastole_volumes},
     test_labels_categorical,
+    batch_size=2,
     verbose=1
 )
 print(f"Resultados da Avaliação no Conjunto de Teste - Perda: {results[0]:.4f}, Acurácia: {results[1]:.4f}")
 
-# --- Previsões e Análise de Erros ---
-print("Fazendo previsões no conjunto de teste...")
 y_test_pred_probs = model.predict(
     {'systole_input': test_systole_volumes, 'diastole_input': test_diastole_volumes},
-    batch_size=4
+    batch_size=2
 )
 
 # Converter probabilidades para classes (índices)

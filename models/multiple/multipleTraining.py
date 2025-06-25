@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 import gc
-from Classification3D.models.classification.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet, build_med3d_with_ssl
+import os
+from Classification3D.models.models import cnn_3d_model, build_med3d, newModel, dualInput_Resnet, build_med3d_with_ssl
 from Classification3D.preprocessing.load_mms import load_mms_data, load_mms_data_dual_input
 from Classification3D.preprocessing.load_data import load_3d_roi_sep
 from Classification3D.preprocessing.loadIncor import load_incor_data
@@ -73,21 +74,28 @@ print(y_val_mms.shape, y_val_acdc.shape, y_val_incor.shape)
 model = build_med3d()
 
 # Compilar o modelo
-optimizer = Adam(learning_rate=0.01)
+optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Configurar callbacks
 callbacks = [
-    ModelCheckpoint(WEIGHT_PATH + "multiple+incor_resnet.weights.keras", save_best_only=True, monitor="val_loss"),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.95, patience=5, min_lr=1e-6),
-    ConfusionMatrixCallback(validation_data=(x_val_img, y_val), batch_size=5)
+    ModelCheckpoint(
+        os.path.join(WEIGHT_PATH, "multiple_accuracy.weights.keras"),
+        save_best_only=True, monitor="val_accuracy", mode="max", verbose=-1
+    ),
+    ModelCheckpoint(
+        os.path.join(WEIGHT_PATH, "multiple_loss.weights.keras"),
+        save_best_only=True, monitor="val_loss", mode="min", verbose=-1
+    ),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.95, patience=5, min_lr=1e-6)
+    # ConfusionMatrixCallback(validation_data=(x_val_img, y_val), batch_size=5)
 ]
 
 history = model.fit(
     x_train_img,
     y_train,
     validation_data=(x_val_img, y_val),
-    epochs=800, batch_size=5,
+    epochs=400, batch_size=16,
     callbacks=callbacks,
     verbose=2
 )
