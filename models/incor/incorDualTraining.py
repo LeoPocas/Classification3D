@@ -55,10 +55,10 @@ x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val
 
 # model = build_med3d()
 model = dualInput_Resnet()
+model.summary()
 
-# Compilar o modelo
 optimizer = Adam(learning_rate=0.0001)
-model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy', 'auc'])
 
 callbacks = [
     ModelCheckpoint(WEIGHT_PATH + "incor2_loss.weights.keras", save_best_only=True, monitor="val_loss", mode="min"),
@@ -76,7 +76,7 @@ history = model.fit(
     y_train,
     validation_data=(
     {'systole_input': x_val_systole, 'diastole_input': x_val_diastole}, y_val), 
-    epochs=300, batch_size=8,
+    epochs=300, batch_size=12,
     callbacks=callbacks,
     verbose=2
 )

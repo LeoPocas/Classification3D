@@ -1,7 +1,7 @@
 from keras.layers import Conv3D, BatchNormalization, Dropout, add, ReLU
 from keras.regularizers import l2
 
-def residual_block_3d(input_tensor, filters, kernel_size=2):
+def residual_block_3d(input_tensor, filters, kernel_size=3):
     x = Conv3D(filters, kernel_size, padding='same', activation='relu', kernel_initializer='he_normal')(input_tensor)
     x = BatchNormalization()(x)
     x = Conv3D(filters, kernel_size, padding='same', kernel_initializer='he_normal')(x)
