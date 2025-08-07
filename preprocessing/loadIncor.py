@@ -175,7 +175,7 @@ def load_incor_data_with_filenames(
                     print(f"Erro ao obter fases ED/ES para {nii_filename} (ID: {patient_id_for_phases}): {phase_info['error']}. Pulando.")
                     continue
                 ed_phase, es_phase = phase_info
-
+                inter_phase = (ed_phase + es_phase)//2
                 if not (0 <= ed_phase < img4D_ROI.shape[3] and 0 <= es_phase < img4D_ROI.shape[3]):
                     print(f"Fases ED ({ed_phase}) ou ES ({es_phase}) fora do intervalo para {nii_filename} (frames: {img4D_ROI.shape[3]}). Pulando.")
                     continue
@@ -187,6 +187,14 @@ def load_incor_data_with_filenames(
                 volumes.append(volume_3d_ED_processed)
                 labels.append(label_val)
                 filenames.append(f"{nii_filename}_ED")
+
+                volume_3d_IE = img4D_ROI[:, :, :, inter_phase]
+                volume_3d_IE = pad_or_crop_volume(volume_3d_IE, target_shape)
+                volume_3d_IE = apply_clahe(volume_3d_IE)
+                volume_3d_IE_processed = np.repeat(volume_3d_IE[..., np.newaxis], 1, axis=-1)
+                volumes.append(volume_3d_IE_processed)
+                labels.append(label_val)
+                filenames.append(f"{nii_filename}_IE")
             
                 volume_3d_ES = img4D_ROI[:, :, :, es_phase]
                 volume_3d_ES = pad_or_crop_volume(volume_3d_ES, target_shape)

@@ -98,8 +98,8 @@ callbacks_list = [
         os.path.join(WEIGHT_PATH, "single_input_best_val_loss.weights.keras"),
         save_best_only=True, monitor="val_loss", mode="min", verbose=-1
     ),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7, verbose=-1),
-    EarlyStopping(monitor='val_accuracy', mode='max', baseline=0.99, patience=600, verbose=-1, restore_best_weights=True)
+    ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7, verbose=-1)
+    # EarlyStopping(monitor='val_accuracy', mode='max', baseline=0.99, patience=600, verbose=-1, restore_best_weights=True)
     # ConfusionMatrixCallback(
     # validation_data=(x_val_img, y_val, filenames_val),
     # batch_size=10
@@ -113,7 +113,7 @@ history = model.fit(
     y_train,
     validation_data=(x_val_img, y_val),
     epochs=300,
-    batch_size=16,
+    batch_size=14,
     callbacks=callbacks_list,
     verbose=2
 )
@@ -126,11 +126,6 @@ if test_images is None or len(test_images) == 0:
     print("Nenhum dado de teste carregado. Encerrando a fase de teste.")
 else:
     print(f"Dados de teste carregados: {len(test_images)} amostras.")
-
-    # (Opcional) Se você não confia em restore_best_weights ou está executando apenas o teste:
-    # print(f"Carregando pesos do modelo de: {os.path.join(WEIGHT_PATH, 'single_input_best_val_accuracy.weights.keras')}")
-    # model.load_weights(os.path.join(WEIGHT_PATH, 'single_input_best_val_accuracy.weights.keras'))
-    # model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy']) # Recompile se necessário
 
     # 2. Avaliar Modelo no Conjunto de Teste
     print(f"\nAvaliando o modelo no conjunto de teste ({len(test_images)} amostras)...")
@@ -165,7 +160,7 @@ else:
         for i in range(len(y_test_true_classes)):
             if y_test_pred_classes[i] != y_test_true_classes[i]:
                 misclassified_test_count += 1
-                filename = test_filenames[i] # Nomes já incluem _ED ou _ES
+                filename = test_filenames[i]
                 true_label_name = class_names_sorted[y_test_true_classes[i]]
                 predicted_label_name = class_names_sorted[y_test_pred_classes[i]]
                 print(f"Arquivo: {filename}, Verdadeiro: {true_label_name}, Previsto: {predicted_label_name}")
@@ -176,6 +171,3 @@ else:
             print(f"\nTotal de arquivos de teste classificados incorretamente: {misclassified_test_count} de {len(test_filenames)}")
     else:
         print("Nenhum nome de arquivo de teste disponível para análise de erros.")
-
-    del test_images, test_labels, test_filenames # Libera memória
-    gc.collect()

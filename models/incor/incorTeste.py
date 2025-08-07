@@ -95,8 +95,8 @@ print(f"{len(test_images)} amostras de teste carregadas.")
 model = build_med3d()
 print("Modelo build_med3d construído.")
 
-# model_weights_path = os.path.join(WEIGHT_PATH, "single_input_best_val_accuracy.weights.keras")
-model_weights_path = os.path.join(WEIGHT_PATH, "single_input_best_val_loss.weights.keras")
+model_weights_path = os.path.join(WEIGHT_PATH, "incor1_0.9.weights.keras")
+# model_weights_path = os.path.join(WEIGHT_PATH, "single_input_best_val_loss.weights.keras")
 if not os.path.exists(model_weights_path):
     print(f"ERRO: Arquivo de pesos não encontrado em {model_weights_path}")
     exit()

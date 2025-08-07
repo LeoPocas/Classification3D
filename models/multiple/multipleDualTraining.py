@@ -60,13 +60,13 @@ systole_images_incor = dataIncor['systole']
 diastole_images_incor = dataIncor['diastole']
 
 x_train_systole_MMs, x_val_systole_MMs, x_train_diastole_MMs, x_val_diastole_MMs, y_train_MMs, y_val_MMs= train_test_split(
-    systole_images_MMs, diastole_images_MMs, labelsMMs, test_size=0.1, random_state=41
+    systole_images_MMs, diastole_images_MMs, labelsMMs, test_size=0.3, random_state=41
 )
 x_train_systole_acdc, x_val_systole_acdc, x_train_diastole_acdc, x_val_diastole_acdc, y_train_acdc, y_val_acdc= train_test_split(
-    systole_images_acdc, diastole_images_acdc, labelsAcdc, test_size=0.1, random_state=41
+    systole_images_acdc, diastole_images_acdc, labelsAcdc, test_size=0.3, random_state=41
 )
 x_train_systole_incor, x_val_systole_incor, x_train_diastole_incor, x_val_diastole_incor, y_train_incor, y_val_incor= train_test_split(
-    systole_images_incor, diastole_images_incor, labelsIncor, test_size=0.1, random_state=41
+    systole_images_incor, diastole_images_incor, labelsIncor, test_size=0.2, random_state=41
 )
 
 x_train_systole = np.concatenate([x_train_systole_MMs, x_train_systole_acdc, x_train_systole_incor], axis=0)
@@ -93,7 +93,7 @@ callbacks = [
         os.path.join(WEIGHT_PATH, "multipleD_loss.weights.keras"),
         save_best_only=True, monitor="val_loss", mode="min", verbose=-1
     ),
-    ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-6)
+    ReduceLROnPlateau(monitor='val_loss', factor=0.96, patience=4, min_lr=1e-6)
     # ConfusionMatrixCallback(
     #     validation_data=(x_val_systole, x_val_diastole, y_val),  # Adicionar todos os inputs e labels
     #     batch_size=2
@@ -134,7 +134,8 @@ test_labels = np.concatenate([labelsMMs, labelsAcdc, labelsIncor], axis=0)
 resultsMMs = model.evaluate(
     {'systole_input': test_systole_MMs, 'diastole_input': test_diastole_MMs}, 
     labelsMMs,
-    verbose=1
+    verbose=1,
+    batch_size=4
 )
 
 resultsAcdc = model.evaluate(
