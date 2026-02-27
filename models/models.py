@@ -144,7 +144,7 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     x1 = MaxPooling3D(pool_size=2, padding='same')(x1)
     x1 = residual_block_3d(x1, 256)
     x1 = GlobalAveragePooling3D()(x1)
-    x1 = Flatten()(x1)
+    # x1 = Flatten()(x1)
 
     # Segundo input: Volume na diástole
     diastole_input = Input(shape=(*input_shape, 1), name='diastole_input')
@@ -162,7 +162,7 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # Combinação das três entradas
     combined = concatenate([x1, x2])
 
-    x = Dropout(0.25)(combined)
+    # x = Dropout(0.25)(combined)
     x = Dense(256, activation='relu')(combined)
     outputs = Dense(num_classes, activation='softmax')(x)
 

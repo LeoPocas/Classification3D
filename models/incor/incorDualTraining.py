@@ -50,7 +50,7 @@ systole_images = data['systole']
 diastole_images = data['diastole']
 
 x_train_systole, x_val_systole, x_train_diastole, x_val_diastole, y_train, y_val= train_test_split(
-    systole_images, diastole_images, labels, test_size=0.1, random_state=41
+    systole_images, diastole_images, labels, test_size=0.10, random_state=41
 )
 
 # model = build_med3d()
@@ -61,8 +61,8 @@ optimizer = Adam(learning_rate=0.0001)
 model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy', 'auc'])
 
 callbacks = [
-    ModelCheckpoint(WEIGHT_PATH + "incor2_loss.weights.keras", save_best_only=True, monitor="val_loss", mode="min"),
-    ModelCheckpoint(WEIGHT_PATH + "incor2_accuracy.weights.keras", save_best_only=True, monitor="val_accuracy", mode="max"),
+    ModelCheckpoint(WEIGHT_PATH + "incorMax2_loss.weights.keras", save_best_only=True, monitor="val_loss", mode="min"),
+    ModelCheckpoint(WEIGHT_PATH + "incorMax2_auc.weights.keras", save_best_only=True, monitor="val_auc", mode="max"),
     ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7),
     EarlyStopping(monitor='val_loss', mode='min', baseline=0.99, patience=600, verbose=1, restore_best_weights=True)
     # ConfusionMatrixCallback(
@@ -76,7 +76,7 @@ history = model.fit(
     y_train,
     validation_data=(
     {'systole_input': x_val_systole, 'diastole_input': x_val_diastole}, y_val), 
-    epochs=300, batch_size=12,
+    epochs=400, batch_size=8,
     callbacks=callbacks,
     verbose=2
 )
