@@ -5,15 +5,20 @@ import datetime
 import traceback
 # Importando do novo arquivo Runner em vez do Training original (que não pudemos alterar)
 from Classification3D.models.incor.incorDualRunner import run_incor_dual_training
+from Classification3D.models.incor.incorConcatRunner import run_incor_concat_training
+
 from Classification3D.utils import OUTPUT_PATH
 
 # ==========================================
 # CONFIGURAÇÃO DA EXECUÇÃO (CONTROLE CENTRAL)
 # ==========================================
 EXPERIMENT_CONFIG = {
-    "experiment_name": "Incor_Dual_Baseline", 
-    "description": "Execução base para estabelecer linha de base de tempo e métricas.",
-    
+    # "experiment_name": "Incor_Dual_Baseline", 
+    # "description": "Execução base para estabelecer linha de base de tempo e métricas.",
+    "model_mode": "concat", # 'dual' ou 'concat'
+    "experiment_name": "Incor_Concat_Baseline",
+    "description": "Execução com volumes sístole/diástole concatenados em profundidade (24 fatias).",
+
     # Hiperparâmetros de Treino
     "epochs"                    : 300,
     "batch_size"                : 8, 
@@ -25,11 +30,11 @@ EXPERIMENT_CONFIG = {
     # Flags de Pré-processamento (Estrutura pronta para implementação futura nos loaders)
     "preprocessing": {
         "apply_roi"             : False,
-        "apply_clahe"           : False,
-        "normalization"         : None, #"min_max", #ou 'z_score', None
+        "apply_clahe"           : True,
+        "normalization"         : "min_max", #"min_max", ou 'z_score', None
         "resampling"            : False,
         "augmentation"          : 'rotate', #'zoom', 'rotate+zoom', or None        
-        "augmentation_rate"     : 0.5, # 0.0 a 1.0 (Porcentagem do dataset que sofrerá augmentation)        
+        "augmentation_rate"     : 1.0, # 0.0 a 1.0 (Porcentagem do dataset que sofrerá augmentation)        
         "save_debug_images"     : False
     }, 
     
@@ -37,12 +42,15 @@ EXPERIMENT_CONFIG = {
     "save_weights": True,
     "weights_filename_loss": "incorMax2_loss.weights.keras",
     "weights_filename_auc": "incorMax2_auc.weights.keras"
-}
+}  
 
-def get_experiment_group_folder(preprocessing_config):
+def get_experiment_group_folder(config):
     """
     Gera um nome de pasta baseado nas flags de pré-processamento ativas.
     """
+    mode_prefix = config.get("model_mode", "unknown") + '_'
+    preprocessing_config = config.get("preprocessing", {})
+
     active_flags = []
     
     if preprocessing_config.get("apply_roi"):
@@ -67,15 +75,15 @@ def get_experiment_group_folder(preprocessing_config):
 
     # Se nenhuma flag relevante estiver ativa
     if not active_flags:
-        return "Baseline_Raw"
+        return mode_prefix + "Baseline_Raw"
         
-    return "_".join(active_flags)
+    return mode_prefix + "_".join(active_flags)
 
 def save_execution_log(config, results, duration_str, timestamp):
     """Salva os dados da execução na pasta 'tempos', organizada por tipo de experimento."""
     
     # Determina o subgrupo baseando-se no pre-processamento
-    group_folder = get_experiment_group_folder(config.get("preprocessing", {}))
+    group_folder = get_experiment_group_folder(config)
     
     # Caminho: tempos/Nome_Do_Grupo/
     log_dir = os.path.join(os.path.dirname(__file__), "tempos", group_folder)
@@ -103,9 +111,10 @@ def main():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     try:
-        # --- EXECUÇÃO DO TREINAMENTO ---
-        # Enviamos a configuração para o script de treinamento
-        training_results = run_incor_dual_training(EXPERIMENT_CONFIG)
+        if EXPERIMENT_CONFIG.get("model_mode") == "concat":
+            training_results = run_incor_concat_training(EXPERIMENT_CONFIG)
+        else:
+            training_results = run_incor_dual_training(EXPERIMENT_CONFIG)
         
         status = "SUCCESS"
     except Exception as e:

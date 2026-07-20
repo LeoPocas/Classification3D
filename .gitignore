@@ -19,7 +19,7 @@ kaggle
 OpenDataset*
 output/
 Datasets/
-
+tempos/*
 # C extensions
 *.so
 # Distribution / packaging

@@ -171,6 +171,31 @@ def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
                   outputs=outputs)
     return model
 
+def singleInput_Resnet_Concat(input_shape=TARGET_SHAPE[:-1] + (TARGET_SHAPE[-1] * 2,), num_classes=NUM_CLASSES):
+    if len(input_shape) == 4:
+        inputs = Input(shape=input_shape, name='concat_input')
+    else:
+        inputs = Input(shape=(*input_shape, 1), name='concat_input')
+    
+    x = Conv3D(64, kernel_size=5, padding='same', activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 64)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 128)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 256)
+    x = GlobalAveragePooling3D()(x)
+
+    x = Dense(256, activation='relu')(x)
+    outputs = Dense(num_classes, activation='softmax')(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    return model
+
 def build_med3d_with_ssl(encoder=create_encoder_resnet(),input_shape=TARGET_SHAPE, num_classes=4, encoder_weights=WEIGHT_PATH+"encoder_ssl.weights.h5", trainable=False):
     # Carrega o encoder pré-treinado
     encoder.load_weights(encoder_weights)  # Carrega os pesos treinados
