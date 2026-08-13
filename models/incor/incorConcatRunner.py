@@ -2,7 +2,7 @@ import numpy as np
 import os
 import gc
 import time
-from Classification3D.models.models import singleInput_Resnet_Concat
+from Classification3D.models.models import singleInput_Resnet_Concat, singleInput_Resnet_ChannelConcat
 from Classification3D.preprocessing.loadIncorParametrized import load_incor_dual_parametrized
 from sklearn.model_selection import train_test_split
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, Callback
@@ -47,7 +47,7 @@ class ConfusionMatrixCallback(Callback):
         cr = classification_report(y_true, y_pred_classes, target_names=list(LABEL_MAPPING.keys()))
         print(f"\nRelatório de Classificação após época {epoch + 1}:\n", cr)
 
-def run_incor_concat_training(config):
+def run_incor_concat_training(config, model_mode):
     """
     Função encapsulada para rodar o treinamento com input concatenado,
     mantendo paridade total de logs e métricas com o modelo original.
@@ -69,10 +69,13 @@ def run_incor_concat_training(config):
 
     data, labels, _ = load_incor_dual_parametrized(training=True, preprocessing_config=preprocess_params)
     
-    # Concatena Sístole e Diástole no eixo Z (profundidade/slices)
-    # De (N, 192, 192, 12) + (N, 192, 192, 12) para (N, 192, 192, 24)
-    x_combined = np.concatenate([data['systole'], data['diastole']], axis=3)
-    
+    if(model_mode=="concat_volume"):
+        x_combined = np.concatenate([data['systole'], data['diastole']], axis=3)
+    elif(model_mode=="early_channel"):
+        x_combined = np.concatenate([data['systole'], data['diastole']], axis=-1)
+    else:
+        raise ValueError(f"Modo de modelo desconhecido: {model_mode}. Use 'concat_volume' ou 'early_channel'.")
+
     load_duration = time.time() - load_start
     print(f"[RUNNER-CONCAT] Dados carregados e concatenados em {load_duration:.2f} segundos.")
 
@@ -88,9 +91,13 @@ def run_incor_concat_training(config):
     gc.collect()
 
     print("[RUNNER-CONCAT] Construindo Modelo de Input Único...")
-    # Define o input_shape dinamicamente baseado nos dados reais (ex: 192, 192, 24)
     input_shape = x_train.shape[1:] 
-    model = singleInput_Resnet_Concat(input_shape=input_shape)
+    if(model_mode=="concat_volume"):
+        model = singleInput_Resnet_Concat(input_shape=input_shape)
+    elif(model_mode=="early_channel"):
+        model = singleInput_Resnet_ChannelConcat(input_shape=input_shape)
+    else:
+        raise ValueError(f"Modo de modelo desconhecido: {model_mode}. Use 'concat_volume' ou 'early_channel'.")
 
     optimizer = Adam(learning_rate=learning_rate)
     model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy', 'auc'])
@@ -127,7 +134,10 @@ def run_incor_concat_training(config):
     
     # Carregamento e preparação do conjunto de teste independente
     test_data, test_labels, _ = load_incor_dual_parametrized(training=False, preprocessing_config=preprocess_params)
-    x_test_concat = np.concatenate([test_data['systole'], test_data['diastole']], axis=3)
+    if model_mode == "concat_volume":
+        x_test_concat = np.concatenate([test_data['systole'], test_data['diastole']], axis=3)
+    elif model_mode == "early_channel":
+        x_test_concat = np.concatenate([test_data['systole'], test_data['diastole']], axis=-1)
     
     del test_data
     gc.collect()
