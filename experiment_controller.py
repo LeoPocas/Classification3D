@@ -15,7 +15,7 @@ os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 # CONFIGURAÇÃO DA EXECUÇÃO (CONTROLE CENTRAL)
 # ==========================================
 EXPERIMENT_CONFIG = {
-    "model_mode": "early_channel", #"concat_volume", # 'dual' ou 'early_channel' 
+    "model_mode": "concat_volume", #"concat_volume", # 'dual' ou 'early_channel' 
     "experiment_name": "Incor_Channel",
     "description": "Execução com volumes sístole/diástole concatenados por canais.",
 
@@ -30,11 +30,11 @@ EXPERIMENT_CONFIG = {
     # Flags de Pré-processamento
     "preprocessing": {
         "apply_roi"             : False,
-        "apply_clahe"           : False,
-        "normalization"         : None, #"min_max", ou 'z_score', None
+        "apply_clahe"           : True,
+        "normalization"         : "min_max", #"min_max", ou 'z_score', None
         "resampling"            : False,
-        "augmentation"          : None, #'rotate', #'zoom', 'rotate+zoom', or None        
-        "augmentation_rate"     : 0.0, # 0.0 a 1.0 (Porcentagem do dataset que sofrerá augmentation)        
+        "augmentation"          : 'rotate', #'rotate', #'zoom', 'rotate+zoom', or None        
+        "augmentation_rate"     : 0.5, # 0.0 a 1.0 (Porcentagem do dataset que sofrerá augmentation)        
         "save_debug_images"     : False
     }, 
     
