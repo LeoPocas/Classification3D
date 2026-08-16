@@ -10,12 +10,11 @@ from Classification3D.utils import WEIGHT_PATH, LABEL_MAPPING, OUTPUT_PATH
 from Classification3D.preprocessing.loadIncor import load_incor_dual_with_filenames
 from keras.optimizers import Adam
 from itertools import cycle
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 model = dualInput_Resnet()
 model.summary()
 
-model_weights_path = os.path.join(WEIGHT_PATH, 'incor2_0.93.weights.keras') 
+model_weights_path = os.path.join(WEIGHT_PATH, 'incorMax2_loss.weights.keras') 
 if os.path.exists(model_weights_path):
     model.load_weights(model_weights_path)
     print(f"Pesos carregados de: {model_weights_path}")

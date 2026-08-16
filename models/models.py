@@ -135,39 +135,95 @@ def newModel(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
 def dualInput_Resnet(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
     # Primeiro input: Volume na sístole
     systole_input = Input(shape=(*input_shape, 1), name='systole_input')
-    x1 = Conv3D(64, kernel_size=1, padding='same', activation='relu')(systole_input)
+    x1 = Conv3D(64, kernel_size=5, padding='same', activation='relu')(systole_input)
     x1 = BatchNormalization()(x1)
     x1 = MaxPooling3D(pool_size=2, padding='same')(x1)
     x1 = residual_block_3d(x1, 64)
+    x1 = MaxPooling3D(pool_size=2, padding='same')(x1)
     x1 = residual_block_3d(x1, 128)
+    x1 = MaxPooling3D(pool_size=2, padding='same')(x1)
     x1 = residual_block_3d(x1, 256)
     x1 = GlobalAveragePooling3D()(x1)
-    x1 = Flatten()(x1)
+    # x1 = Flatten()(x1)
 
     # Segundo input: Volume na diástole
     diastole_input = Input(shape=(*input_shape, 1), name='diastole_input')
-    x2 = Conv3D(64, kernel_size=1, padding='same', activation='relu')(diastole_input)
+    x2 = Conv3D(64, kernel_size=5, padding='same', activation='relu')(diastole_input)
     x2 = BatchNormalization()(x2)
     x2 = MaxPooling3D(pool_size=2, padding='same')(x2)
     x2 = residual_block_3d(x2, 64)
+    x2 = MaxPooling3D(pool_size=2, padding='same')(x2)
     x2 = residual_block_3d(x2, 128)
+    x2 = MaxPooling3D(pool_size=2, padding='same')(x2)
     x2 = residual_block_3d(x2, 256)
     x2 = GlobalAveragePooling3D()(x2)
-    x2 = Flatten()(x2)
-
-    # metadata_input = Input(shape=(3,), name='metadata_input')
-    # metadata_x = Dense(9, activation='relu')(metadata_input)
+    # x2 = Flatten()(x2)
 
     # Combinação das três entradas
     combined = concatenate([x1, x2])
 
-    # Camadas densas finais
+    # x = Dropout(0.25)(combined)
     x = Dense(256, activation='relu')(combined)
     outputs = Dense(num_classes, activation='softmax')(x)
 
     # Modelo final
     model = Model(inputs={'systole_input': systole_input, 'diastole_input': diastole_input}, 
                   outputs=outputs)
+    return model
+
+def singleInput_Resnet_Concat(input_shape=TARGET_SHAPE[:-1] + (TARGET_SHAPE[-1] * 2,), num_classes=NUM_CLASSES):
+    if len(input_shape) == 4:
+        inputs = Input(shape=input_shape, name='concat_input')
+    else:
+        inputs = Input(shape=(*input_shape, 1), name='concat_input')
+    
+    x = Conv3D(64, kernel_size=5, padding='same', activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 64)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 128)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 256)
+    x = GlobalAveragePooling3D()(x)
+
+    x = Dense(256, activation='relu')(x)
+    outputs = Dense(num_classes, activation='softmax')(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
+    return model
+
+def singleInput_Resnet_ChannelConcat(input_shape=TARGET_SHAPE, num_classes=NUM_CLASSES):
+    """
+    Early fusion via canais:
+    Recebe um volume 3D com formato (H, W, D, 2), onde:
+      - Canal 0: Volume do Final da Sístole (ES)
+      - Canal 1: Volume do Final da Diástole (ED)
+    """
+
+    inputs = Input(shape=input_shape, name='channel_concat_input')
+    
+    # A Conv3D agora processa os 2 canais simultaneamente no primeiro filtro
+    x = Conv3D(64, kernel_size=5, padding='same', activation='relu')(inputs)
+    x = BatchNormalization()(x)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 64)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 128)
+    x = MaxPooling3D(pool_size=2, padding='same')(x)
+    
+    x = residual_block_3d(x, 256)
+    x = GlobalAveragePooling3D()(x)
+
+    x = Dense(256, activation='relu')(x)
+    outputs = Dense(num_classes, activation='softmax')(x)
+
+    model = Model(inputs=inputs, outputs=outputs)
     return model
 
 def build_med3d_with_ssl(encoder=create_encoder_resnet(),input_shape=TARGET_SHAPE, num_classes=4, encoder_weights=WEIGHT_PATH+"encoder_ssl.weights.h5", trainable=False):
