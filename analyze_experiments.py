@@ -11,7 +11,7 @@ def load_logs():
 
     if not os.path.exists(LOGS_DIR):
         print(f"Diretório de logs não encontrado: {LOGS_DIR}")
-        return []
+        return pd.DataFrame()
 
     # Percorre todas as pastas de grupos (ex: Baseline_Raw, CLAHE, etc.)
     for group_name in os.listdir(LOGS_DIR):
@@ -35,6 +35,13 @@ def load_logs():
                 if not timing:
                     continue
 
+                raw_test_results = results.get("test_results_raw")
+                test_loss = (
+                    raw_test_results[0]
+                    if isinstance(raw_test_results, list) and raw_test_results
+                    else np.nan
+                )
+
                 experiments_data.append({
                     "Group": group_name,
                     "File": json_file,
@@ -44,7 +51,7 @@ def load_logs():
                     "Test Accuracy": results.get("test_accuracy", np.nan),
                     "Test AUC": results.get("test_auc", np.nan),
                     # Tenta pegar test loss da lista raw (index 0) ou de alguma chave especifica
-                    "Test Loss": results.get("test_results_raw", [np.nan])[0] if isinstance(results.get("test_results_raw"), list) else np.nan
+                    "Test Loss": test_loss
                 })
             except Exception as e:
                 print(f"Erro ao ler {file_path}: {e}")
@@ -75,19 +82,21 @@ def analyze_and_report():
     # então manteremos segundos e minutos nos prints.
 
     stats_df = df.groupby("Group")[analyze_columns].agg(['count', 'mean', 'std', 'min', 'max'])
+    stats_df.columns = [f"{column}_{statistic}" for column, statistic in stats_df.columns]
+    stats_df.index.name = "Group"
     
     # Exibir relatório textual
     for group in stats_df.index:
         print(f"\nGrupo: {group}")
         print("-" * 40)
-        n_samples = stats_df.loc[group, (analyze_columns[0], 'count')]
+        n_samples = len(df[df["Group"] == group])
         print(f"Execuções válidas: {int(n_samples)}")
         
         for col in analyze_columns:
-            mean_val = stats_df.loc[group, (col, 'mean')]
-            std_val = stats_df.loc[group, (col, 'std')]
-            min_val = stats_df.loc[group, (col, 'min')]
-            max_val = stats_df.loc[group, (col, 'max')]
+            mean_val = stats_df.loc[group, f"{col}_mean"]
+            std_val = stats_df.loc[group, f"{col}_std"]
+            min_val = stats_df.loc[group, f"{col}_min"]
+            max_val = stats_df.loc[group, f"{col}_max"]
             
             # Coeficiente de Variação (CV) = (Desvio Padrão / Média) * 100
             cv = (std_val / mean_val * 100) if mean_val > 0 else 0.0

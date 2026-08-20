@@ -1,0 +1,96 @@
+{
+    "timestamp": "2026-08-19_12-51-26",
+    "duration": "0:27:50",
+    "group": "early_channel_CLAHE_Norm_min_max_Aug_rotate_100pct",
+    "config": {
+        "model_mode": "early_channel",
+        "experiment_name": "Incor_Channel",
+        "description": "Execu\u00e7\u00e3o com volumes s\u00edstole/di\u00e1stole concatenados por canais.",
+        "epochs": 300,
+        "batch_size": 8,
+        "predictions_batch_size": 4,
+        "learning_rate": 0.0001,
+        "test_split": 0.1,
+        "random_seed": 41,
+        "preprocessing": {
+            "apply_roi": false,
+            "apply_clahe": true,
+            "normalization": "min_max",
+            "resampling": false,
+            "augmentation": "rotate",
+            "augmentation_rate": 1.0,
+            "save_debug_images": false
+        },
+        "save_weights": true,
+        "weights_filename_loss": "incorMax2_loss.weights.keras",
+        "weights_filename_auc": "incorMax2_auc.weights.keras"
+    },
+    "results": {
+        "timing": {
+            "load_data_seconds": 39.10769081115723,
+            "training_seconds": 1621.806031703949,
+            "testing_seconds": 9.252880334854126
+        },
+        "final_train_loss": 0.0004725669859908521,
+        "final_train_accuracy": 1.0,
+        "final_val_loss": 0.5189107656478882,
+        "final_val_accuracy": 0.9482758641242981,
+        "test_results_raw": [
+            0.7268838882446289,
+            0.855555534362793,
+            0.9357099533081055
+        ],
+        "test_accuracy": 0.855555534362793,
+        "test_auc": 0.9357099533081055,
+        "confusion_matrix": [
+            [
+                24,
+                3,
+                3
+            ],
+            [
+                3,
+                25,
+                2
+            ],
+            [
+                1,
+                1,
+                28
+            ]
+        ],
+        "classification_report": {
+            "NOR": {
+                "precision": 0.8571428571428571,
+                "recall": 0.8,
+                "f1-score": 0.8275862068965517,
+                "support": 30.0
+            },
+            "DCM": {
+                "precision": 0.8620689655172413,
+                "recall": 0.8333333333333334,
+                "f1-score": 0.847457627118644,
+                "support": 30.0
+            },
+            "HCM": {
+                "precision": 0.8484848484848485,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.8888888888888888,
+                "support": 30.0
+            },
+            "accuracy": 0.8555555555555555,
+            "macro avg": {
+                "precision": 0.855898890381649,
+                "recall": 0.8555555555555555,
+                "f1-score": 0.8546442409680282,
+                "support": 90.0
+            },
+            "weighted avg": {
+                "precision": 0.8558988903816489,
+                "recall": 0.8555555555555555,
+                "f1-score": 0.8546442409680282,
+                "support": 90.0
+            }
+        }
+    }
+}
