@@ -296,23 +296,31 @@ def load_incor_dual_parametrized(
                         aug_method = preprocessing_config.get("augmentation")
                         aug_rate = preprocessing_config.get("augmentation_rate", 1.0)
                         
-                        # Decide aleatoriamente se este paciente sofrerá augmentation baseada na taxa
-                        should_augment = np.random.rand() < aug_rate
-                        
-                        if training and aug_method and aug_method != 'None' and should_augment:
-                            # Aplica augmentation N vezes por paciente?
-                            # Para mestrado, dobrar o dataset (1x aug) é um bom começo.
-                            # Vamos gerar 1 variação para cada original.
-                            
-                            # Config com augmentation ativo (o próprio preprocessing_config já tem)
-                            vol_ED_aug = process_single_volume(vol_ED, target_shape, preprocessing_config, patient_id=f"{patient_id}_ED_aug", debug_save=current_debug)
-                            vol_ES_aug = process_single_volume(vol_ES, target_shape, preprocessing_config, patient_id=f"{patient_id}_ES_aug", debug_save=current_debug)
+                        aug_rate = max(0.0, float(aug_rate))
+                        guaranteed_augmentations = int(np.floor(aug_rate))
+                        extra_augmentation_probability = aug_rate - guaranteed_augmentations
+                        if np.random.rand() < extra_augmentation_probability:
+                            guaranteed_augmentations += 1
 
-                            if vol_ED_aug is not None and vol_ES_aug is not None:
-                                systole_volumes.append(vol_ES_aug)
-                                diastole_volumes.append(vol_ED_aug)
-                                labels.append(label_val) # Mesmo label
-                                filenames.append(f"aug_{nii_filename}")
+                        if training and aug_method and aug_method != 'None':
+                            for augmentation_index in range(guaranteed_augmentations):
+                                aug_suffix = f"aug_{augmentation_index + 1}"
+                                vol_ED_aug = process_single_volume(
+                                    vol_ED, target_shape, preprocessing_config,
+                                    patient_id=f"{patient_id}_ED_{aug_suffix}",
+                                    debug_save=current_debug
+                                )
+                                vol_ES_aug = process_single_volume(
+                                    vol_ES, target_shape, preprocessing_config,
+                                    patient_id=f"{patient_id}_ES_{aug_suffix}",
+                                    debug_save=current_debug
+                                )
+
+                                if vol_ED_aug is not None and vol_ES_aug is not None:
+                                    systole_volumes.append(vol_ES_aug)
+                                    diastole_volumes.append(vol_ED_aug)
+                                    labels.append(label_val)
+                                    filenames.append(f"{aug_suffix}_{nii_filename}")
 
                 except Exception as e:
                     print(f"Erro processando {nii_filename}: {e}")

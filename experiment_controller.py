@@ -15,7 +15,7 @@ os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 # CONFIGURAÇÃO DA EXECUÇÃO (CONTROLE CENTRAL)
 # ==========================================
 EXPERIMENT_CONFIG = {
-    "model_mode": "concat_volume", #"concat_volume", # 'dual' ou 'early_channel' 
+    "model_mode": "dual", #"concat", # 'dual' ou 'early_channel' 
     "experiment_name": "Incor_Channel",
     "description": "Execução com volumes sístole/diástole concatenados por canais.",
 
@@ -34,7 +34,7 @@ EXPERIMENT_CONFIG = {
         "normalization"         : "min_max", #"min_max", ou 'z_score', None
         "resampling"            : False,
         "augmentation"          : 'rotate', #'rotate', #'zoom', 'rotate+zoom', or None        
-        "augmentation_rate"     : 0.5, # 0.0 a 1.0 (Porcentagem do dataset que sofrerá augmentation)        
+        "augmentation_rate"     : 2.0, # <= 1: probabilidade; > 1: número de cópias aumentadas        
         "save_debug_images"     : False
     }, 
     
@@ -61,7 +61,8 @@ def get_experiment_group_folder(config):
     aug = preprocessing_config.get("augmentation")
     if aug:
         rate = preprocessing_config.get("augmentation_rate", 1.0)
-        rate_str = f"{int(rate*100)}pct"
+        rate = float(rate)
+        rate_str = f"{rate:g}x" if rate > 1 else f"{int(rate*100)}pct"
         active_flags.append(f"Aug_{aug}_{rate_str}")
 
     if not active_flags:
@@ -158,4 +159,4 @@ if __name__ == "__main__":
     if args.single_run:
         execute_single_training()
     else:
-        run_orchestrator(total_runs=9)
+        run_orchestrator(total_runs=10)
