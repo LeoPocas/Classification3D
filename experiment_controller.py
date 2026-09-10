@@ -31,10 +31,10 @@ EXPERIMENT_CONFIG = {
     "preprocessing": {
         "apply_roi"             : False,
         "apply_clahe"           : True,
-        "normalization"         : "min_max", #"min_max", ou 'z_score', None
+        "normalization"         : None, #"min_max", ou 'z_score', None
         "resampling"            : False,
-        "augmentation"          : 'rotate', #'rotate', #'zoom', 'rotate+zoom', or None        
-        "augmentation_rate"     : 2.0, # <= 1: probabilidade; > 1: número de cópias aumentadas        
+        "augmentation"          : None, #'rotate', #'zoom', 'rotate+zoom', or None        
+        "augmentation_rate"     : 0.0, # <= 1: probabilidade; > 1: número de cópias aumentadas        
         "save_debug_images"     : False
     }, 
     
@@ -159,4 +159,4 @@ if __name__ == "__main__":
     if args.single_run:
         execute_single_training()
     else:
-        run_orchestrator(total_runs=10)
+        run_orchestrator(total_runs=3)

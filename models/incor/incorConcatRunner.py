@@ -104,8 +104,8 @@ def run_incor_concat_training(config, model_mode):
 
     # Restaurado os dois checkpoints originais (Loss e AUC) + o callback customizado por época
     callbacks = [
-        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=True, monitor="val_loss", mode="min"),
-        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=True, monitor="val_auc", mode="max"),
+        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=False, monitor="val_loss", mode="min"),
+        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=False, monitor="val_auc", mode="max"),
         ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7)
         # ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=batch_size)
     ]
