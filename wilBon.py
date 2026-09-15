@@ -55,7 +55,7 @@ def load_logs_dataframe():
     return pd.DataFrame(records)
 
 
-def run_wilcoxon_paired_scenario_a(baseline_name="Baseline_Raw", alpha_global=0.05):
+def run_wilcoxon_paired_scenario_a(baseline_name="dual_Baseline_Raw", alpha_global=0.05):
     """
     Executa o Teste de Wilcoxon pareado por repetição (Cenário A),
     calculando Bonferroni sobre as K comparações válidas contra o Baseline.
@@ -140,4 +140,4 @@ def run_wilcoxon_paired_scenario_a(baseline_name="Baseline_Raw", alpha_global=0.
 
 
 if __name__ == "__main__":
-    run_wilcoxon_paired_scenario_a(baseline_name="Baseline_Raw", alpha_global=0.01)
+    run_wilcoxon_paired_scenario_a(baseline_name="dual_Baseline_Raw", alpha_global=0.01)
