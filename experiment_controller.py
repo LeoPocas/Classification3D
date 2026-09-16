@@ -6,6 +6,7 @@ import datetime
 import traceback
 import subprocess
 import argparse
+from copy import deepcopy
 
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
@@ -14,13 +15,13 @@ os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 # ==========================================
 # CONFIGURAÇÃO DA EXECUÇÃO (CONTROLE CENTRAL)
 # ==========================================
-EXPERIMENT_CONFIG = {
-    "model_mode": "concat", #"concat", # 'dual' ou 'early_channel' 
+BASE_EXPERIMENT_CONFIG = {
+    "model_mode": "concat", # 'dual', 'concat'/'concat_volume' ou 'early_channel'
     "experiment_name": "Incor_Channel",
     "description": "Execução com volumes sístole/diástole concatenados por canais.",
 
     # Hiperparâmetros de Treino
-    "epochs"                    : 300,
+    "epochs"                    : 3,
     "batch_size"                : 8, 
     "predictions_batch_size"    : 4,
     "learning_rate"             : 0.0001,
@@ -42,7 +43,44 @@ EXPERIMENT_CONFIG = {
     "save_weights": True,
     "weights_filename_loss": "incorMax2_loss.weights.keras",
     "weights_filename_auc": "incorMax2_auc.weights.keras"
-}  
+}
+
+DEFAULT_PLANS_FILE = os.path.join(os.path.dirname(__file__), "experiment_plans.json")
+
+
+def load_experiment_plans(plans_file):
+    with open(plans_file, "r", encoding="utf-8") as file:
+        plans = json.load(file)
+
+    if not isinstance(plans, list):
+        raise ValueError("O arquivo de planos deve conter uma lista JSON.")
+    return plans
+
+
+def merge_config(overrides):
+    config = deepcopy(BASE_EXPERIMENT_CONFIG)
+    config.update({key: value for key, value in overrides.items() if key != "preprocessing"})
+    config["preprocessing"].update(overrides.get("preprocessing", {}))
+    return config
+
+
+def build_experiment_configs(experiment_plans, runs_override=None):
+    configs = []
+    for plan_number, plan in enumerate(experiment_plans, start=1):
+        runs = runs_override if runs_override is not None else plan.get("runs", 1)
+        if runs < 1:
+            raise ValueError("O número de execuções deve ser maior ou igual a 1.")
+        config = merge_config(plan.get("overrides", {}))
+        configs.extend(
+            (config, plan_number, run_number)
+            for run_number in range(1, runs + 1)
+        )
+    return configs
+
+
+def add_run_suffix(filename, plan_number, run_number):
+    stem, extension = os.path.splitext(filename)
+    return f"{stem}_plan_{plan_number}_run_{run_number}{extension}"
 
 def get_experiment_group_folder(config):
     mode_prefix = config.get("model_mode", "unknown") + '_'
@@ -68,7 +106,7 @@ def get_experiment_group_folder(config):
     if not active_flags:
         return mode_prefix + "Baseline_Raw"
         
-    return mode_prefix + "_".join(active_flags)
+    return mode_prefix + "seq_" + "_".join(active_flags)
 
 def save_execution_log(config, results, duration_str, timestamp):
     group_folder = get_experiment_group_folder(config)
@@ -91,7 +129,7 @@ def save_execution_log(config, results, duration_str, timestamp):
     
     print(f"\n[LOG] Relatório de execução salvo em: {filepath}")
 
-def execute_single_training():
+def execute_single_training(config, run_number):
     """Executa um único treino isolado (chamado no subprocesso)."""
     from Classification3D.models.incor.incorDualRunner import run_incor_dual_training
     from Classification3D.models.incor.incorConcatRunner import run_incor_concat_training
@@ -100,10 +138,19 @@ def execute_single_training():
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
     try:
-        if EXPERIMENT_CONFIG.get("model_mode") == "early_channel" or EXPERIMENT_CONFIG.get("model_mode") == "concat_volume":
-            training_results = run_incor_concat_training(EXPERIMENT_CONFIG, EXPERIMENT_CONFIG.get("model_mode"))
+        model_mode = config.get("model_mode")
+        if model_mode == "concat":
+            model_mode = "concat_volume"
+
+        if model_mode in {"early_channel", "concat_volume"}:
+            training_results = run_incor_concat_training(config, model_mode)
         else:
-            training_results = run_incor_dual_training(EXPERIMENT_CONFIG)
+            if model_mode != "dual":
+                raise ValueError(
+                    f"Modo de modelo desconhecido: {model_mode}. "
+                    "Use 'dual', 'concat_volume' ou 'early_channel'."
+                )
+            training_results = run_incor_dual_training(config)
         
         status = "SUCCESS"
     except Exception as e:
@@ -129,34 +176,64 @@ def execute_single_training():
         print(f"Tempo de Treinamento Puro: {str(datetime.timedelta(seconds=int(train_sec)))} ({train_sec:.2f}s)")
         print(f"Tempo de Teste e Inferência: {str(datetime.timedelta(seconds=int(test_sec)))} ({test_sec:.2f}s)")
     
-    save_execution_log(EXPERIMENT_CONFIG, training_results, duration_str, timestamp)
+    save_execution_log(config, training_results, duration_str, timestamp)
 
-def run_orchestrator(total_runs):
-    """Orquestra 10 execuções, cada uma em um processo Python totalmente novo."""
-    print(f"=== Orquestrando Bateria de {total_runs} Processos Isolados: {EXPERIMENT_CONFIG['experiment_name']} ===")
+def run_orchestrator(experiment_plans, runs_override=None):
+    """Executa todos os planos, isolando cada rodada em um processo Python novo."""
     script_path = os.path.abspath(__file__)
-    
-    for run_idx in range(1, total_runs + 1):
+
+    experiment_configs = build_experiment_configs(experiment_plans, runs_override)
+    print(f"=== Orquestrando {len(experiment_configs)} Processos Isolados ===")
+
+    for experiment_index, (config, plan_number, run_number) in enumerate(experiment_configs, start=1):
+        run_config = deepcopy(config)
+        run_config["weights_filename_loss"] = add_run_suffix(
+            run_config["weights_filename_loss"], plan_number, run_number
+        )
+        run_config["weights_filename_auc"] = add_run_suffix(
+            run_config["weights_filename_auc"], plan_number, run_number
+        )
+
         print(f"\n==========================================")
-        print(f"   DISPARANDO SUBPROCESSO {run_idx}/{total_runs}")
+        print(f"   DISPARANDO SUBPROCESSO {experiment_index}/{len(experiment_configs)}")
+        print(f"   Experimento: {run_config['experiment_name']} | Rodada: {run_number}")
         print(f"==========================================")
-        
-        # Dispara uma nova instância do Python do zero para garantir 100% de isolamento de memória e GPU
-        cmd = [sys.executable, script_path, "--single-run"]
+
+        cmd = [
+            sys.executable,
+            script_path,
+            "--single-run",
+            "--run-number",
+            str(run_number),
+            "--experiment-json",
+            json.dumps(run_config)
+        ]
         result = subprocess.run(cmd)
-        
+
         if result.returncode != 0:
-            print(f"⚠️ AVISO: O subprocesso {run_idx} terminou com código de erro {result.returncode}")
-            
-        # Pausa leve entre processos
+            print(
+                f"AVISO: O subprocesso {experiment_index} terminou "
+                f"com código de erro {result.returncode}"
+            )
+
         time.sleep(2)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Orquestrador de Experimentos 3D")
     parser.add_argument("--single-run", action="store_true", help="Executa apenas uma rodada de treino isolada")
+    parser.add_argument("--runs", type=int, help="Número de repetições para cada plano")
+    parser.add_argument(
+        "--plans",
+        default=DEFAULT_PLANS_FILE,
+        help="Arquivo JSON com a lista de planos de execução"
+    )
+    parser.add_argument("--run-number", type=int, default=1, help=argparse.SUPPRESS)
+    parser.add_argument("--experiment-json", help=argparse.SUPPRESS)
     args = parser.parse_args()
 
     if args.single_run:
-        execute_single_training()
+        if not args.experiment_json:
+            raise ValueError("--experiment-json é obrigatório com --single-run.")
+        execute_single_training(json.loads(args.experiment_json), args.run_number)
     else:
-        run_orchestrator(total_runs=2)
+        run_orchestrator(load_experiment_plans(args.plans), runs_override=args.runs)

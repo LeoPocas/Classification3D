@@ -5,7 +5,7 @@ import time
 from Classification3D.models.models import singleInput_Resnet_Concat, singleInput_Resnet_ChannelConcat
 from Classification3D.preprocessing.loadIncorParametrized import load_incor_dual_parametrized
 from sklearn.model_selection import train_test_split
-from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, Callback
+from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, Callback
 from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import mixed_precision
@@ -104,9 +104,10 @@ def run_incor_concat_training(config, model_mode):
 
     # Restaurado os dois checkpoints originais (Loss e AUC) + o callback customizado por época
     callbacks = [
-        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=False, monitor="val_loss", mode="min"),
-        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=False, monitor="val_auc", mode="max"),
-        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7)
+        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=True, monitor="val_loss", mode="min"),
+        ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=True, monitor="val_auc", mode="max"),
+        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7),
+        EarlyStopping(monitor='val_loss', mode='min', baseline=0.65, patience=40, start_from_epoch=60, verbose=1, restore_best_weights=True)
         # ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=batch_size)
     ]
 
@@ -119,7 +120,7 @@ def run_incor_concat_training(config, model_mode):
         epochs=epochs, 
         batch_size=batch_size,
         callbacks=callbacks,
-        verbose=2
+        verbose=1
     )
     
     train_duration = time.time() - train_start
@@ -132,6 +133,10 @@ def run_incor_concat_training(config, model_mode):
     print("[RUNNER-CONCAT] Iniciando Fase de Teste...")
     test_start = time.time()
     
+    best_weights_path = os.path.join(WEIGHT_PATH, weights_loss_name)
+    print(f"[RUNNER-CONCAT] Carregando melhores pesos de: {best_weights_path}")
+    model.load_weights(best_weights_path)
+
     # Carregamento e preparação do conjunto de teste independente
     test_data, test_labels, _ = load_incor_dual_parametrized(training=False, preprocessing_config=preprocess_params)
     if model_mode == "concat_volume":
@@ -166,18 +171,30 @@ def run_incor_concat_training(config, model_mode):
 
     del x_test_concat, test_labels
     gc.collect()
-    
-    # Retorna o dicionário com a estrutura idêntica à do código original
+
+    best_loss_idx = int(np.argmin(history.history['val_loss']))
+
+    # Retorna o dicionário atualizado
     return {
         "timing": {
             "load_data_seconds": load_duration,
             "training_seconds": train_duration,
             "testing_seconds": test_duration
         },
-        "final_train_loss": history.history['loss'][-1],
-        "final_train_accuracy": history.history['accuracy'][-1],
-        "final_val_loss": history.history['val_loss'][-1],
-        "final_val_accuracy": history.history['val_accuracy'][-1],
+        # --- DADOS DA MELHOR ÉPOCA (Pesos que foram carregados para o Teste) ---
+        "best_epoch": best_loss_idx + 1,
+        "best_val_loss": float(history.history['val_loss'][best_loss_idx]),
+        "best_val_accuracy": float(history.history['val_accuracy'][best_loss_idx]),
+        "best_val_auc": float(history.history['val_auc'][best_loss_idx]),
+        
+        # --- DADOS DA ÚLTIMA ÉPOCA EXECUTADA ---
+        "last_epoch_executed": len(history.history['loss']),
+        "final_train_loss": float(history.history['loss'][-1]),
+        "final_train_accuracy": float(history.history['accuracy'][-1]),
+        "final_val_loss": float(history.history['val_loss'][-1]),
+        "final_val_accuracy": float(history.history['val_accuracy'][-1]),
+        "final_val_auc": float(history.history['val_auc'][-1]),
+        # Resultados no conjunto de Teste
         "test_results_raw": results, # [loss, accuracy, auc]
         "test_accuracy": results[1] if len(results) > 1 else None,
         "test_auc": results[2] if len(results) > 2 else None,
