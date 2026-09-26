@@ -1,0 +1,102 @@
+{
+    "timestamp": "2026-09-25_18-25-28",
+    "duration": "0:09:01",
+    "group": "concat_seq_Baseline_Raw",
+    "config": {
+        "model_mode": "concat",
+        "experiment_name": "Incor_Concat",
+        "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+        "epochs": 300,
+        "batch_size": 8,
+        "predictions_batch_size": 4,
+        "learning_rate": 0.0001,
+        "test_split": 0.1,
+        "random_seed": 41,
+        "preprocessing": {
+            "apply_roi": false,
+            "apply_clahe": false,
+            "normalization": null,
+            "resampling": false,
+            "augmentation": null,
+            "augmentation_rate": 0.0,
+            "save_debug_images": false
+        },
+        "save_weights": true,
+        "weights_filename_loss": "incorMax2_loss.weights_plan_2_run_2.keras",
+        "weights_filename_auc": "incorMax2_auc.weights_plan_2_run_2.keras"
+    },
+    "results": {
+        "timing": {
+            "load_data_seconds": 11.455402851104736,
+            "training_seconds": 514.7951889038086,
+            "testing_seconds": 15.08464765548706
+        },
+        "best_epoch": 7,
+        "best_val_loss": 0.8123043775558472,
+        "best_val_accuracy": 0.6206896305084229,
+        "best_val_auc": 0.8171819448471069,
+        "last_epoch_executed": 100,
+        "final_train_loss": 0.03446352481842041,
+        "final_train_accuracy": 0.9884169697761536,
+        "final_val_loss": 1.7376396656036377,
+        "final_val_accuracy": 0.7586206793785095,
+        "final_val_auc": 0.825505256652832,
+        "test_results_raw": [
+            0.895563006401062,
+            0.6333333253860474,
+            0.806543231010437
+        ],
+        "test_accuracy": 0.6333333253860474,
+        "test_auc": 0.806543231010437,
+        "confusion_matrix": [
+            [
+                14,
+                6,
+                10
+            ],
+            [
+                0,
+                19,
+                11
+            ],
+            [
+                1,
+                5,
+                24
+            ]
+        ],
+        "classification_report": {
+            "NOR": {
+                "precision": 0.9333333333333333,
+                "recall": 0.4666666666666667,
+                "f1-score": 0.6222222222222222,
+                "support": 30.0
+            },
+            "DCM": {
+                "precision": 0.6333333333333333,
+                "recall": 0.6333333333333333,
+                "f1-score": 0.6333333333333333,
+                "support": 30.0
+            },
+            "HCM": {
+                "precision": 0.5333333333333333,
+                "recall": 0.8,
+                "f1-score": 0.64,
+                "support": 30.0
+            },
+            "accuracy": 0.6333333333333333,
+            "macro avg": {
+                "precision": 0.7000000000000001,
+                "recall": 0.6333333333333334,
+                "f1-score": 0.6318518518518519,
+                "support": 90.0
+            },
+            "weighted avg": {
+                "precision": 0.7,
+                "recall": 0.6333333333333333,
+                "f1-score": 0.6318518518518519,
+                "support": 90.0
+            }
+        }
+    }
+}
