@@ -90,8 +90,8 @@ def run_incor_dual_training(config):
     callbacks = [
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=False, monitor="val_loss", mode="min"),
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=False, monitor="val_auc", mode="max"),
-        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7)
-        #EarlyStopping(monitor='val_loss', mode='min', baseline=0.99, patience=600, verbose=1, restore_best_weights=True)
+        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7),
+        EarlyStopping(monitor='val_loss', mode='min', baseline=0.65, patience=40, start_from_epoch=60, verbose=1, restore_best_weights=True)
     ]
 
     print(f"[RUNNER] Iniciando Treinamento (Epochs: {epochs}, Batch: {batch_size})...")
