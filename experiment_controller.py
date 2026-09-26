@@ -8,6 +8,8 @@ import subprocess
 import argparse
 from copy import deepcopy
 
+TIMEOUT_SEGUNDOS = 7200  # 120 minutos
+log_file_path = f"log_execucao_run_250926.txt"
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
@@ -21,7 +23,7 @@ BASE_EXPERIMENT_CONFIG = {
     "description": "Execução com volumes sístole/diástole concatenados por canais.",
 
     # Hiperparâmetros de Treino
-    "epochs"                    : 3,
+    "epochs"                    : 300,
     "batch_size"                : 8, 
     "predictions_batch_size"    : 4,
     "learning_rate"             : 0.0001,
@@ -104,7 +106,7 @@ def get_experiment_group_folder(config):
         active_flags.append(f"Aug_{aug}_{rate_str}")
 
     if not active_flags:
-        return mode_prefix + "Baseline_Raw"
+        return mode_prefix + "seq_Baseline_Raw"
         
     return mode_prefix + "seq_" + "_".join(active_flags)
 
@@ -129,8 +131,21 @@ def save_execution_log(config, results, duration_str, timestamp):
     
     print(f"\n[LOG] Relatório de execução salvo em: {filepath}")
 
+def check_gpu_availability():
+    import tensorflow as tf
+    gpus = tf.config.list_physical_devices('GPU')
+    if not gpus:
+        raise RuntimeError(
+            "CRÍTICO: Nenhuma GPU encontrada pelo TensorFlow! "
+            "A execução foi abortada para evitar treino na CPU."
+        )
+    print(f"[CHECK] GPU detectada com sucesso: {gpus}")
+
 def execute_single_training(config, run_number):
     """Executa um único treino isolado (chamado no subprocesso)."""
+
+    check_gpu_availability()
+    
     from Classification3D.models.incor.incorDualRunner import run_incor_dual_training
     from Classification3D.models.incor.incorConcatRunner import run_incor_concat_training
     
@@ -201,6 +216,7 @@ def run_orchestrator(experiment_plans, runs_override=None):
 
         cmd = [
             sys.executable,
+            "-u",
             script_path,
             "--single-run",
             "--run-number",
@@ -208,13 +224,32 @@ def run_orchestrator(experiment_plans, runs_override=None):
             "--experiment-json",
             json.dumps(run_config)
         ]
-        result = subprocess.run(cmd)
 
-        if result.returncode != 0:
-            print(
-                f"AVISO: O subprocesso {experiment_index} terminou "
-                f"com código de erro {result.returncode}"
-            )
+        try:
+            with open(log_file_path, "a", encoding="utf-8") as f_log:
+                f_log.write(f"\n--- INÍCIO EXP {experiment_index} (Plan {plan_number} Run {run_number}) [{datetime.datetime.now()}] ---\n")
+                f_log.flush()
+
+                result = subprocess.run(
+                    cmd,
+                    timeout=TIMEOUT_SEGUNDOS,
+                    # Redirecionar a saída diretamente para ficheiro evita encher a memória pipe
+                    stdout=f_log,               # Grava a saída diretamente no arquivo
+                    stderr=subprocess.STDOUT    # Redireciona erros para o mesmo arquivo de log
+                )
+
+                if result.returncode != 0:
+                    print(f"AVISO: O subprocesso {experiment_index} falhou (Código: {result.returncode})")
+
+        except subprocess.TimeoutExpired:
+            print(f"CRÍTICO: O treino {experiment_index} excedeu {TIMEOUT_SEGUNDOS}s e foi cancelado.")
+            # Escreve o timeout no arquivo de log para registro
+            with open(log_file_path, "a", encoding="utf-8") as f_log:
+                f_log.write(f"\n[TIMEOUT] Treino cancelado após {TIMEOUT_SEGUNDOS} segundos.\n")
+            
+            # Força a limpeza de subprocessos remanescentes e avança para o próximo
+            subprocess.run(["pkill", "-f", "single-run"])
+            continue
 
         time.sleep(2)
 
