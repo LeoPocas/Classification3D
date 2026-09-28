@@ -9,7 +9,7 @@ import argparse
 from copy import deepcopy
 
 TIMEOUT_SEGUNDOS = 7200  # 120 minutos
-log_file_path = f"log_execucao_run_250926.txt"
+log_file_path = f"log_execucao_run_260926.txt"
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
