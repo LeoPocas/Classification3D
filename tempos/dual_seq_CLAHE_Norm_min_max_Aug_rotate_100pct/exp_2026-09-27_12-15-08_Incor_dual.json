@@ -1,0 +1,96 @@
+{
+    "timestamp": "2026-09-27_12-15-08",
+    "duration": "0:39:36",
+    "group": "dual_seq_CLAHE_Norm_min_max_Aug_rotate_100pct",
+    "config": {
+        "model_mode": "dual",
+        "experiment_name": "Incor_dual",
+        "description": "Volumes sistole/diastole dual branch.",
+        "epochs": 300,
+        "batch_size": 8,
+        "predictions_batch_size": 4,
+        "learning_rate": 0.0001,
+        "test_split": 0.1,
+        "random_seed": 41,
+        "preprocessing": {
+            "apply_roi": false,
+            "apply_clahe": true,
+            "normalization": "min_max",
+            "resampling": false,
+            "augmentation": "rotate",
+            "augmentation_rate": 1.0,
+            "save_debug_images": false
+        },
+        "save_weights": true,
+        "weights_filename_loss": "incorMax2_loss.weights_plan_10_run_15.keras",
+        "weights_filename_auc": "incorMax2_auc.weights_plan_10_run_15.keras"
+    },
+    "results": {
+        "timing": {
+            "load_data_seconds": 39.639477491378784,
+            "training_seconds": 2326.9812138080597,
+            "testing_seconds": 9.30873990058899
+        },
+        "final_train_loss": 0.0004111718444619328,
+        "final_train_accuracy": 1.0,
+        "final_val_loss": 0.00018269177235197276,
+        "final_val_accuracy": 1.0,
+        "test_results_raw": [
+            0.4742516875267029,
+            0.855555534362793,
+            0.9596297740936279
+        ],
+        "test_accuracy": 0.855555534362793,
+        "test_auc": 0.9596297740936279,
+        "confusion_matrix": [
+            [
+                25,
+                2,
+                3
+            ],
+            [
+                0,
+                24,
+                6
+            ],
+            [
+                1,
+                1,
+                28
+            ]
+        ],
+        "classification_report": {
+            "NOR": {
+                "precision": 0.9615384615384616,
+                "recall": 0.8333333333333334,
+                "f1-score": 0.8928571428571429,
+                "support": 30.0
+            },
+            "DCM": {
+                "precision": 0.8888888888888888,
+                "recall": 0.8,
+                "f1-score": 0.8421052631578947,
+                "support": 30.0
+            },
+            "HCM": {
+                "precision": 0.7567567567567568,
+                "recall": 0.9333333333333333,
+                "f1-score": 0.835820895522388,
+                "support": 30.0
+            },
+            "accuracy": 0.8555555555555555,
+            "macro avg": {
+                "precision": 0.869061369061369,
+                "recall": 0.8555555555555555,
+                "f1-score": 0.8569277671791419,
+                "support": 90.0
+            },
+            "weighted avg": {
+                "precision": 0.8690613690613691,
+                "recall": 0.8555555555555555,
+                "f1-score": 0.8569277671791418,
+                "support": 90.0
+            }
+        }
+    }
+}
