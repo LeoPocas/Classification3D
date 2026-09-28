@@ -126,7 +126,7 @@ def run_incor_dual_training(config):
         {'systole_input': test_systole, 'diastole_input': test_diastole}, 
         test_labels,
         batch_size=pred_batch_size,
-        verbose=1
+        verbose=2
     )
 
     print("[RUNNER] Resultados no conjunto de teste:", results)

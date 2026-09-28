@@ -120,7 +120,7 @@ def run_incor_concat_training(config, model_mode):
         epochs=epochs, 
         batch_size=batch_size,
         callbacks=callbacks,
-        verbose=1
+        verbose=2
     )
     
     train_duration = time.time() - train_start
@@ -152,7 +152,7 @@ def run_incor_concat_training(config, model_mode):
         x_test_concat, 
         test_labels,
         batch_size=pred_batch_size,
-        verbose=1
+        verbose=2
     )
 
     print("[RUNNER-CONCAT] Resultados no conjunto de teste:", results)
