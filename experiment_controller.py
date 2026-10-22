@@ -6,10 +6,11 @@ import datetime
 import traceback
 import subprocess
 import argparse
+import importlib.util
 from copy import deepcopy
 
 TIMEOUT_SEGUNDOS = 7200  # 120 minutos
-log_file_path = f"log_execucao_run_260926.txt"
+log_file_path = f"log_execucao_run_300926.txt"
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
@@ -18,6 +19,7 @@ os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
 # CONFIGURAÇÃO DA EXECUÇÃO (CONTROLE CENTRAL)
 # ==========================================
 BASE_EXPERIMENT_CONFIG = {
+    "dataset": "incor", # 'incor' ou 'mms'
     "model_mode": "concat", # 'dual', 'concat'/'concat_volume' ou 'early_channel'
     "experiment_name": "Incor_Channel",
     "description": "Execução com volumes sístole/diástole concatenados por canais.",
@@ -27,8 +29,8 @@ BASE_EXPERIMENT_CONFIG = {
     "batch_size"                : 8, 
     "predictions_batch_size"    : 4,
     "learning_rate"             : 0.0001,
-    "test_split"                : 0.10,
-    "random_seed"               : 41,
+    "test_split"                : 0.2,
+    "random_seed"               : 416767,
     
     # Flags de Pré-processamento
     "preprocessing": {
@@ -87,7 +89,7 @@ def add_run_suffix(filename, plan_number, run_number):
 def get_experiment_group_folder(config):
     mode_prefix = config.get("model_mode", "unknown") + '_'
     preprocessing_config = config.get("preprocessing", {})
-
+    dataset = config.get("dataset", "incor").lower()
     active_flags = []
     if preprocessing_config.get("apply_roi"):
         active_flags.append("ROI")
@@ -108,7 +110,7 @@ def get_experiment_group_folder(config):
     if not active_flags:
         return mode_prefix + "seq_Baseline_Raw"
         
-    return mode_prefix + "seq_" + "_".join(active_flags)
+    return mode_prefix + "seq_" + dataset + "_" + "_".join(active_flags)
 
 def save_execution_log(config, results, duration_str, timestamp):
     group_folder = get_experiment_group_folder(config)
@@ -146,9 +148,6 @@ def execute_single_training(config, run_number):
 
     check_gpu_availability()
     
-    from Classification3D.models.incor.incorDualRunner import run_incor_dual_training
-    from Classification3D.models.incor.incorConcatRunner import run_incor_concat_training
-    
     start_time = time.time()
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
@@ -157,15 +156,42 @@ def execute_single_training(config, run_number):
         if model_mode == "concat":
             model_mode = "concat_volume"
 
+        dataset = config.get("dataset", "incor").lower()
+        if dataset == "incor":
+            from Classification3D.models.incor.incorDualRunner import run_incor_dual_training
+            from Classification3D.models.incor.incorConcatRunner import run_incor_concat_training
+
+            dual_runner = run_incor_dual_training
+            concat_runner = run_incor_concat_training
+        elif dataset == "mms":
+            mms_runner_path = os.path.join(
+                os.path.dirname(__file__), "models", "m&ms", "mmsRunner.py"
+            )
+            mms_spec = importlib.util.spec_from_file_location("mmsRunner", mms_runner_path)
+            if mms_spec is None or mms_spec.loader is None:
+                raise ImportError(f"Não foi possível carregar o runner M&Ms: {mms_runner_path}")
+            mms_module = importlib.util.module_from_spec(mms_spec)
+            mms_spec.loader.exec_module(mms_module)
+            run_mms_training = mms_module.run_mms_training
+
+            dual_runner = lambda runner_config: run_mms_training(runner_config, "dual")
+            concat_runner = lambda runner_config, runner_mode: run_mms_training(
+                runner_config, runner_mode
+            )
+        else:
+            raise ValueError(
+                f"Dataset desconhecido: {dataset}. Use 'incor' ou 'mms'."
+            )
+
         if model_mode in {"early_channel", "concat_volume"}:
-            training_results = run_incor_concat_training(config, model_mode)
+            training_results = concat_runner(config, model_mode)
         else:
             if model_mode != "dual":
                 raise ValueError(
                     f"Modo de modelo desconhecido: {model_mode}. "
                     "Use 'dual', 'concat_volume' ou 'early_channel'."
                 )
-            training_results = run_incor_dual_training(config)
+            training_results = dual_runner(config)
         
         status = "SUCCESS"
     except Exception as e:

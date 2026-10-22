@@ -4,7 +4,11 @@ from Classification3D.utils import CLIP, GRID
 
 def apply_clahe(volume, clip_limit=CLIP, tile_grid_size=GRID):
     # Normaliza e escala o volume para uint8
-    volume_normalized = (volume - volume.min()) / (volume.max() - volume.min())
+    volume_min = np.min(volume)
+    volume_range = np.max(volume) - volume_min
+    if not np.isfinite(volume_range) or volume_range <= 0:
+        return np.zeros(volume.shape, dtype=np.uint8)
+    volume_normalized = (volume - volume_min) / volume_range
     volume_scaled = (volume_normalized * 255).astype(np.uint8)
 
     # Cria o CLAHE
