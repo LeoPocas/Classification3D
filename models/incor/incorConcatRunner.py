@@ -58,6 +58,7 @@ def run_incor_concat_training(config, model_mode):
     val_split_size = config.get("test_split", 0.10) # Tratado como split de validação
     random_seed = config.get("random_seed", 41)
     learning_rate = config.get("learning_rate", 0.0001)
+    training_data_fraction = config.get("training_data_fraction", 1.0)
     pred_batch_size = config.get("predictions_batch_size", 4)
     weights_loss_name = config.get("weights_filename_loss", "incorConcat_loss.weights.keras")
     weights_auc_name = config.get("weights_filename_auc", "incorConcat_auc.weights.keras")
@@ -67,7 +68,12 @@ def run_incor_concat_training(config, model_mode):
     print("[RUNNER-CONCAT] Carregando dados Incor para concatenação...")
     load_start = time.time()
 
-    data, labels, _ = load_incor_dual_parametrized(training=True, preprocessing_config=preprocess_params)
+    data, labels, _ = load_incor_dual_parametrized(
+        training=True,
+        preprocessing_config=preprocess_params,
+        training_data_fraction=training_data_fraction,
+        random_seed=random_seed,
+    )
     
     if(model_mode=="concat_volume"):
         x_combined = np.concatenate([data['systole'], data['diastole']], axis=3)
@@ -138,7 +144,10 @@ def run_incor_concat_training(config, model_mode):
     model.load_weights(best_weights_path)
 
     # Carregamento e preparação do conjunto de teste independente
-    test_data, test_labels, _ = load_incor_dual_parametrized(training=False, preprocessing_config=preprocess_params)
+    test_data, test_labels, _ = load_incor_dual_parametrized(
+        training=False,
+        preprocessing_config=preprocess_params,
+    )
     if model_mode == "concat_volume":
         x_test_concat = np.concatenate([test_data['systole'], test_data['diastole']], axis=3)
     elif model_mode == "early_channel":

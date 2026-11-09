@@ -30,7 +30,7 @@ class MarginalEfficiencyEvaluator:
         w_fn: float = 5.0,
         w_cross: float = 2.0,
         w_fp: float = 1.0,
-        lambda_param: float = 0.5,
+        lambda_param: float = 1.5,
     ):
         self.w_fn = w_fn
         self.w_cross = w_cross
@@ -172,7 +172,7 @@ def calculate_marginal_efficiency(
     baseline_suffix: str = "Baseline_Raw",
     logs_dir: str = LOGS_DIR,
     output_path: str = os.path.join(
-        OUTPUT_PATH, "marginal_efficiency_summary.csv"
+        OUTPUT_PATH, "marginal_efficiency_summary_1.5.csv"
     ),
     evaluator: Optional[MarginalEfficiencyEvaluator] = None,
 ) -> pd.DataFrame:

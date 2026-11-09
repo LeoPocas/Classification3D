@@ -9,7 +9,8 @@ from Classification3D.preprocessing.roiExtraction import get_ROI_distance_transf
 from Classification3D.preprocessing.equalizacao import apply_clahe, pad_or_crop_volume
 from Classification3D.preprocessing.augmentation import apply_augmentation
 from Classification3D.utils import (
-    INCOR_RESAMPLED_PATH, TARGET_SHAPE, LABEL_MAPPING_MMS, ZOOM, SPACING, OUTPUT_PATH
+    INCOR_RESAMPLED_PATH, TARGET_SHAPE, LABEL_MAPPING_MMS, ZOOM, SPACING, OUTPUT_PATH,
+    select_training_patients,
 )
 flag_print_ROI, flag_print_normalization, flag_print_clahe = True, True, True # Flags para controle de prints de debug (ROI, Normalização, CLAHE, Pad/Crop)
 # Constantes padrão para defaults
@@ -175,7 +176,9 @@ def load_incor_dual_parametrized(
     label_mapping=LABEL_MAPPING_MMS,
     zoom_factor=ZOOM,
     ed_es_file_path=OUTPUT_PATH+'ED_ES_instants.txt',
-    preprocessing_config=None
+    preprocessing_config=None,
+    training_data_fraction=1.0,
+    random_seed=41,
 ):
     """
     Loader parametrizável para dados duais (Sístole + Diástole).
@@ -200,6 +203,32 @@ def load_incor_dual_parametrized(
         print(f"Diretório não encontrado: {base_folder_path}")
         return {'systole': np.array([]), 'diastole': np.array([])}, np.array([])
 
+    selected_patients = None
+    if training:
+        patient_labels = {}
+        for status_folder in os.listdir(base_folder_path):
+            status_path = os.path.join(base_folder_path, status_folder)
+            if not os.path.isdir(status_path):
+                continue
+            if status_folder == 'Normal':
+                label_val = label_mapping.get('NOR', 0)
+            elif status_folder == 'Hipertrófico':
+                label_val = label_mapping.get('HCM', 2)
+            elif status_folder == 'Dilatados':
+                label_val = label_mapping.get('DCM', 1)
+            else:
+                continue
+            for nii_filename in os.listdir(status_path):
+                if nii_filename.endswith(('.nii', '.nii.gz')):
+                    patient_labels[nii_filename.split('.nii')[0]] = label_val
+        selected_patients = select_training_patients(
+            patient_labels, training_data_fraction, random_seed
+        )
+        print(
+            f"Selecionando {len(selected_patients)}/{len(patient_labels)} "
+            f"pacientes de treinamento ({float(training_data_fraction) * 100:g}%)."
+        )
+
     # Flag para controlar salvamento de debug (salva apenas o primeiro paciente do lote)
     should_save_debug = preprocessing_config.get("save_debug_images", False)
     debug_saved_count = 0
@@ -223,6 +252,9 @@ def load_incor_dual_parametrized(
 
         for nii_filename in os.listdir(status_path):
             if nii_filename.endswith('.nii') or nii_filename.endswith('.nii.gz'):
+                patient_id = nii_filename.split('.nii')[0]
+                if selected_patients is not None and patient_id not in selected_patients:
+                    continue
                 patient_path = os.path.join(status_path, nii_filename)
                 
                 try:
@@ -253,7 +285,6 @@ def load_incor_dual_parametrized(
                     img4D_ROI = np.transpose(img4D_ROI, [2, 3, 1, 0]) 
 
                     # Obter fases ED/ES
-                    patient_id = nii_filename.split('.nii')[0]
                     phase_info = get_ED_ES_phase_from_file_v2(patient_id, ed_es_file_path)
                     
                     if isinstance(phase_info, dict):
@@ -346,4 +377,3 @@ def load_incor_dual_parametrized(
     
     # Vamos retornar estrutura completa
     return {'systole': systole_np, 'diastole': diastole_np}, labels_cat, filenames
-

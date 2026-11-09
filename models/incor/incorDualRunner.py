@@ -56,6 +56,7 @@ def run_incor_dual_training(config):
     test_split_size = config.get("test_split", 0.10)
     random_seed = config.get("random_seed", 41)
     learning_rate = config.get("learning_rate", 0.0001)
+    training_data_fraction = config.get("training_data_fraction", 1.0)
     pred_batch_size = config.get("predictions_batch_size", 4)
     weights_loss_name = config.get("weights_filename_loss", "incorMax2_loss.weights.keras")
     weights_auc_name = config.get("weights_filename_auc", "incorMax2_auc.weights.keras")
@@ -66,7 +67,12 @@ def run_incor_dual_training(config):
     print("[RUNNER] Carregando dados Incor Dual Parametrizados...")
     load_start = time.time()
 
-    data, labels, _ = load_incor_dual_parametrized(training=True, preprocessing_config=preprocess_params)
+    data, labels, _ = load_incor_dual_parametrized(
+        training=True,
+        preprocessing_config=preprocess_params,
+        training_data_fraction=training_data_fraction,
+        random_seed=random_seed,
+    )
     load_duration = time.time() - load_start
     print(f"[RUNNER] Dados carregados em {load_duration:.2f} segundos.")
 
@@ -90,8 +96,8 @@ def run_incor_dual_training(config):
     callbacks = [
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=False, monitor="val_loss", mode="min"),
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=False, monitor="val_auc", mode="max"),
-        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7),
-        EarlyStopping(monitor='val_loss', mode='min', baseline=0.65, patience=40, start_from_epoch=60, verbose=1, restore_best_weights=True)
+        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7)
+        # EarlyStopping(monitor='val_loss', mode='min', baseline=0.65, patience=40, start_from_epoch=60, verbose=1, restore_best_weights=True)
     ]
 
     print(f"[RUNNER] Iniciando Treinamento (Epochs: {epochs}, Batch: {batch_size})...")
@@ -116,7 +122,10 @@ def run_incor_dual_training(config):
     test_start = time.time()
     
     # Carregamento de teste parametrizado
-    test_data, test_labels, test_filenames = load_incor_dual_parametrized(training=False, preprocessing_config=preprocess_params)
+    test_data, test_labels, test_filenames = load_incor_dual_parametrized(
+        training=False,
+        preprocessing_config=preprocess_params,
+    )
     
     test_systole = test_data['systole']
     test_diastole = test_data['diastole']

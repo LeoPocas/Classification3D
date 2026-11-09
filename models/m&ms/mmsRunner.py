@@ -20,12 +20,19 @@ from Classification3D.utils import LABEL_MAPPING_MMS, MMs_REESPACADO, WEIGHT_PAT
 mixed_precision.set_global_policy("float32")
 
 
-def _load_data(training, preprocessing_config=None):
+def _load_data(
+    training,
+    preprocessing_config=None,
+    training_data_fraction=1.0,
+    random_seed=41,
+):
     data, labels = load_mms_data_dual_input(
         training=training,
         data_path=MMs_REESPACADO,
         label_mapping=LABEL_MAPPING_MMS,
         preprocessing_config=preprocessing_config,
+        training_data_fraction=training_data_fraction,
+        random_seed=random_seed,
     )
     return data, labels
 
@@ -58,6 +65,7 @@ def run_mms_training(config, model_mode):
     val_split_size = config.get("test_split", 0.2)
     random_seed = config.get("random_seed", 41)
     learning_rate = config.get("learning_rate", 0.0001)
+    training_data_fraction = config.get("training_data_fraction", 1.0)
     pred_batch_size = config.get("predictions_batch_size", 4)
     weights_loss_name = config.get("weights_filename_loss", "mms_loss.weights.keras")
     weights_auc_name = config.get("weights_filename_auc", "mms_auc.weights.keras")
@@ -65,7 +73,12 @@ def run_mms_training(config, model_mode):
 
     print("[RUNNER-MMS] Carregando dados M&Ms...")
     load_start = time.time()
-    data, labels = _load_data(training=True, preprocessing_config=preprocessing_config)
+    data, labels = _load_data(
+        training=True,
+        preprocessing_config=preprocessing_config,
+        training_data_fraction=training_data_fraction,
+        random_seed=random_seed,
+    )
     load_duration = time.time() - load_start
     print(f"[RUNNER-MMS] Dados carregados em {load_duration:.2f} segundos.")
 
@@ -162,7 +175,8 @@ def run_mms_training(config, model_mode):
     best_weights_path = os.path.join(WEIGHT_PATH, weights_loss_name)
     model.load_weights(best_weights_path)
     test_data, test_labels = _load_data(
-        training=False, preprocessing_config=preprocessing_config
+        training=False,
+        preprocessing_config=preprocessing_config,
     )
     test_inputs = (
         {

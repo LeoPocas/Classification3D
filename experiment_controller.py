@@ -10,7 +10,7 @@ import importlib.util
 from copy import deepcopy
 
 TIMEOUT_SEGUNDOS = 7200  # 120 minutos
-log_file_path = f"log_execucao_run_300926.txt"
+log_file_path = f"log_execucao_run_081126.txt"
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
@@ -31,6 +31,7 @@ BASE_EXPERIMENT_CONFIG = {
     "learning_rate"             : 0.0001,
     "test_split"                : 0.2,
     "random_seed"               : 416767,
+    "training_data_fraction"    : 0.3,
     
     # Flags de Pré-processamento
     "preprocessing": {
@@ -107,10 +108,19 @@ def get_experiment_group_folder(config):
         rate_str = f"{rate:g}x" if rate > 1 else f"{int(rate*100)}pct"
         active_flags.append(f"Aug_{aug}_{rate_str}")
 
+    training_fraction = float(config.get("training_data_fraction", 1.0))
+
     if not active_flags:
-        return mode_prefix + "seq_Baseline_Raw"
-        
-    return mode_prefix + "seq_" + dataset + "_" + "_".join(active_flags)
+        if training_fraction < 1:
+            active_flags.append(f"TrainData_{training_fraction * 100:g}pct")
+            return mode_prefix + "30_Baseline_Raw"
+        else:
+            return mode_prefix + "Baseline_Raw"
+    
+    if training_fraction < 1:
+            active_flags.append(f"TrainData_{training_fraction * 100:g}pct")
+
+    return mode_prefix + dataset + "_" + "_".join(active_flags)
 
 def save_execution_log(config, results, duration_str, timestamp):
     group_folder = get_experiment_group_folder(config)

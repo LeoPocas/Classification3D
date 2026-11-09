@@ -144,6 +144,8 @@ def load_mms_data(
     label_mapping=LABEL_MAPPING_MMS,
     zoom_factor=ZOOM,
     preprocessing_config=None,
+    training_data_fraction=1.0,
+    random_seed=41,
 ):
     if preprocessing_config is None:
         preprocessing_config = DEFAULT_PREPROCESSING.copy()
@@ -186,10 +188,26 @@ def load_mms_data(
         folder = 'Testing'
         print("training:", training)
     folder_path = os.path.join(data_dir, folder)
+    selected_patients = None
+    if training:
+        patient_labels = {
+            patient_id: details['label']
+            for patient_id, details in patient_info.items()
+            if os.path.isdir(os.path.join(folder_path, patient_id))
+        }
+        selected_patients = select_training_patients(
+            patient_labels, training_data_fraction, random_seed
+        )
+        print(
+            f"Selecionando {len(selected_patients)}/{len(patient_labels)} "
+            f"pacientes de treinamento ({float(training_data_fraction) * 100:g}%)."
+        )
 
     if os.path.exists(folder_path):
         for patient_id in os.listdir(folder_path):
             patient_path = os.path.join(folder_path, patient_id)
+            if selected_patients is not None and patient_id not in selected_patients:
+                continue
 
             if patient_id not in patient_info:
                 excluded_pathology = excluded_patient_pathologies.get(patient_id)
@@ -289,6 +307,8 @@ def load_mms_data_dual_input(
     label_mapping=LABEL_MAPPING_MMS,
     zoom_factor=ZOOM,
     preprocessing_config=None,
+    training_data_fraction=1.0,
+    random_seed=41,
 ):
     if preprocessing_config is None:
         preprocessing_config = DEFAULT_PREPROCESSING.copy()
@@ -333,8 +353,24 @@ def load_mms_data_dual_input(
             print(f"Atenção: A pasta {path} não existe.")
             continue
         patients = os.listdir(path)
+        selected_patients = None
+        if training:
+            patient_labels = {
+                patient_id: details['label']
+                for patient_id, details in patient_info.items()
+                if patient_id in patients
+            }
+            selected_patients = select_training_patients(
+                patient_labels, training_data_fraction, random_seed
+            )
+            print(
+                f"Selecionando {len(selected_patients)}/{len(patient_labels)} "
+                f"pacientes de treinamento ({float(training_data_fraction) * 100:g}%)."
+            )
         for patient_id in patients:
             patient_path = os.path.join(path, patient_id)
+            if selected_patients is not None and patient_id not in selected_patients:
+                continue
 
             # Ignorar pacientes não listados no CSV
             if patient_id not in patient_info:
