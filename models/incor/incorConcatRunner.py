@@ -9,7 +9,7 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau, EarlyStopping, C
 from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import mixed_precision
-from Classification3D.utils import LABEL_MAPPING, WEIGHT_PATH
+from Classification3D.utils import LABEL_MAPPING, WEIGHT_PATH, use_early_stopping
 
 # Configuração para usar precisão mista (Mantido igual ao original)
 mixed_precision.set_global_policy('float32')
@@ -112,10 +112,21 @@ def run_incor_concat_training(config, model_mode):
     callbacks = [
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=True, monitor="val_loss", mode="min"),
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=True, monitor="val_auc", mode="max"),
-        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7),
-        EarlyStopping(monitor='val_loss', mode='min', baseline=0.65, patience=40, start_from_epoch=60, verbose=1, restore_best_weights=True)
+        ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7)
         # ConfusionMatrixCallback(validation_data=(x_val, y_val), batch_size=batch_size)
     ]
+    if use_early_stopping(config):
+        callbacks.append(
+            EarlyStopping(
+                monitor='val_loss',
+                mode='min',
+                baseline=0.65,
+                patience=40,
+                start_from_epoch=60,
+                verbose=1,
+                restore_best_weights=True,
+            )
+        )
 
     print(f"[RUNNER-CONCAT] Iniciando Treinamento (Epochs: {epochs}, Batch: {batch_size})...")
 

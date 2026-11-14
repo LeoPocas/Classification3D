@@ -15,7 +15,12 @@ from Classification3D.models.models import (
     singleInput_Resnet_Concat,
 )
 from Classification3D.preprocessing.load_mms import load_mms_data_dual_input
-from Classification3D.utils import LABEL_MAPPING_MMS, MMs_REESPACADO, WEIGHT_PATH
+from Classification3D.utils import (
+    LABEL_MAPPING_MMS,
+    MMs_REESPACADO,
+    WEIGHT_PATH,
+    use_early_stopping,
+)
 
 mixed_precision.set_global_policy("float32")
 
@@ -144,16 +149,19 @@ def run_mms_training(config, model_mode):
             mode="max",
         ),
         ReduceLROnPlateau(monitor="val_loss", factor=0.97, patience=4, min_lr=1e-7),
-        EarlyStopping(
-            monitor="val_loss",
-            mode="min",
-            baseline=0.65,
-            patience=50,
-            start_from_epoch=100,
-            verbose=1,
-            restore_best_weights=True,
-        )
     ]
+    if use_early_stopping(config):
+        callbacks.append(
+            EarlyStopping(
+                monitor="val_loss",
+                mode="min",
+                baseline=0.65,
+                patience=50,
+                start_from_epoch=100,
+                verbose=1,
+                restore_best_weights=True,
+            )
+        )
 
     print(f"[RUNNER-MMS] Iniciando treinamento (Epochs: {epochs}, Batch: {batch_size})...")
     history = model.fit(

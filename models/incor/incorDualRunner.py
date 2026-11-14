@@ -10,7 +10,12 @@ from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import mixed_precision
 from sklearn.preprocessing import StandardScaler
-from Classification3D.utils import LABEL_MAPPING, ACDC_REESPACADO_TESTING, WEIGHT_PATH
+from Classification3D.utils import (
+    LABEL_MAPPING,
+    ACDC_REESPACADO_TESTING,
+    WEIGHT_PATH,
+    use_early_stopping,
+)
 
 # Configuração para usar precisão mista
 mixed_precision.set_global_policy('float32')
@@ -97,8 +102,19 @@ def run_incor_dual_training(config):
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_loss_name), save_best_only=False, monitor="val_loss", mode="min"),
         ModelCheckpoint(os.path.join(WEIGHT_PATH, weights_auc_name), save_best_only=False, monitor="val_auc", mode="max"),
         ReduceLROnPlateau(monitor='val_loss', factor=0.97, patience=4, min_lr=1e-7)
-        # EarlyStopping(monitor='val_loss', mode='min', baseline=0.65, patience=40, start_from_epoch=60, verbose=1, restore_best_weights=True)
     ]
+    if use_early_stopping(config):
+        callbacks.append(
+            EarlyStopping(
+                monitor='val_loss',
+                mode='min',
+                baseline=0.65,
+                patience=40,
+                start_from_epoch=60,
+                verbose=1,
+                restore_best_weights=True,
+            )
+        )
 
     print(f"[RUNNER] Iniciando Treinamento (Epochs: {epochs}, Batch: {batch_size})...")
 
