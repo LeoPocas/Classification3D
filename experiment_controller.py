@@ -144,7 +144,8 @@ def get_experiment_group_folder(config):
         active_flags.append(f"TrainData_{training_fraction * 100:g}pct")
 
     stopping = "earlyStop" if use_early_stopping(config) else "full"
-    return "_".join([dataset, model_mode, stopping] + active_flags)
+    experiment_folder = "_".join([dataset, model_mode, stopping] + active_flags)
+    return os.path.join(dataset, model_mode, experiment_folder)
 
 def save_execution_log(config, results, duration_str, timestamp):
     group_folder = get_experiment_group_folder(config)
