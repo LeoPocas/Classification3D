@@ -10,7 +10,7 @@ import importlib.util
 from copy import deepcopy
 
 TIMEOUT_SEGUNDOS = 7200  # 120 minutos
-log_file_path = f"log_execucao_run_081126.txt"
+log_file_path = f"log_execucao_run_091126.txt"
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
@@ -32,6 +32,7 @@ BASE_EXPERIMENT_CONFIG = {
     "test_split"                : 0.2,
     "random_seed"               : 416767,
     "training_data_fraction"    : 0.3,
+    "early_stopping"            : False, 
     
     # Flags de Pré-processamento
     "preprocessing": {
@@ -52,6 +53,22 @@ BASE_EXPERIMENT_CONFIG = {
 
 DEFAULT_PLANS_FILE = os.path.join(os.path.dirname(__file__), "experiment_plans.json")
 
+def use_early_stopping(config):
+    """Return whether the configured training uses early stopping."""
+    if "early_stopping" in config:
+        return bool(config["early_stopping"])
+
+    dataset = config.get("dataset", "incor").lower()
+    if dataset == "mms":
+        return True
+
+    model_mode = config.get("model_mode", "concat")
+    training_fraction = float(config.get("training_data_fraction", 1.0))
+    return (
+        dataset == "incor"
+        and model_mode in {"concat", "concat_volume", "early_channel"}
+        and training_fraction < 1
+    )
 
 def load_experiment_plans(plans_file):
     with open(plans_file, "r", encoding="utf-8") as file:
@@ -88,9 +105,17 @@ def add_run_suffix(filename, plan_number, run_number):
     return f"{stem}_plan_{plan_number}_run_{run_number}{extension}"
 
 def get_experiment_group_folder(config):
-    mode_prefix = config.get("model_mode", "unknown") + '_'
+    model_mode = config.get("model_mode", "unknown")
+    if model_mode == "concat_volume":
+        model_mode = "concat"
+    if model_mode not in {"dual", "concat", "early_channel"}:
+        raise ValueError(f"Modo de modelo desconhecido: {model_mode}")
+
     preprocessing_config = config.get("preprocessing", {})
     dataset = config.get("dataset", "incor").lower()
+    if dataset not in {"incor", "mms"}:
+        raise ValueError(f"Dataset desconhecido: {dataset}")
+    training_fraction = float(config.get("training_data_fraction", 1.0))
     active_flags = []
     if preprocessing_config.get("apply_roi"):
         active_flags.append("ROI")
@@ -108,19 +133,18 @@ def get_experiment_group_folder(config):
         rate_str = f"{rate:g}x" if rate > 1 else f"{int(rate*100)}pct"
         active_flags.append(f"Aug_{aug}_{rate_str}")
 
-    training_fraction = float(config.get("training_data_fraction", 1.0))
-
     if not active_flags:
         if training_fraction < 1:
             active_flags.append(f"TrainData_{training_fraction * 100:g}pct")
-            return mode_prefix + "30_Baseline_Raw"
+            active_flags[0] = f"Baseline_Raw_TrainData_{training_fraction * 100:g}pct"
         else:
-            return mode_prefix + "Baseline_Raw"
+            active_flags.append("Baseline_Raw")
     
-    if training_fraction < 1:
-            active_flags.append(f"TrainData_{training_fraction * 100:g}pct")
+    elif training_fraction < 1:
+        active_flags.append(f"TrainData_{training_fraction * 100:g}pct")
 
-    return mode_prefix + dataset + "_" + "_".join(active_flags)
+    stopping = "earlyStop" if use_early_stopping(config) else "full"
+    return "_".join([dataset, model_mode, stopping] + active_flags)
 
 def save_execution_log(config, results, duration_str, timestamp):
     group_folder = get_experiment_group_folder(config)

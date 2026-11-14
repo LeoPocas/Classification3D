@@ -58,3 +58,21 @@ def select_training_patients(patient_labels, fraction, random_seed):
     return selected
 KAGGLE_PATH = os.path.join(BASE_DIR,'./kaggle/input/')
 LOGS_DIR = os.path.join(BASE_DIR, "tempos")
+
+
+def use_early_stopping(config):
+    """Return whether the configured training uses early stopping."""
+    if "early_stopping" in config:
+        return bool(config["early_stopping"])
+
+    dataset = config.get("dataset", "incor").lower()
+    if dataset == "mms":
+        return True
+
+    model_mode = config.get("model_mode", "concat")
+    training_fraction = float(config.get("training_data_fraction", 1.0))
+    return (
+        dataset == "incor"
+        and model_mode in {"concat", "concat_volume", "early_channel"}
+        and training_fraction < 1
+    )
