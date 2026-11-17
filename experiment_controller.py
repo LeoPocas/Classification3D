@@ -51,7 +51,7 @@ BASE_EXPERIMENT_CONFIG = {
     "weights_filename_auc": "incorMax2_auc.weights.keras"
 }
 
-DEFAULT_PLANS_FILE = os.path.join(os.path.dirname(__file__), "experiment_plans.json")
+DEFAULT_PLANS_FILE = os.path.join(os.path.dirname(__file__), "run_config/experiment_plans.json")
 
 def use_early_stopping(config):
     """Return whether the configured training uses early stopping."""
