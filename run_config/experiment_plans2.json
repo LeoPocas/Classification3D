@@ -54,3 +54,424 @@
         }
     }
 ]
+[
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "concat",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 1.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "concat",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "concat",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": true,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+    "runs": 15,
+        "overrides": {
+            "model_mode": "concat",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 0.5,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "concat",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 1.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "concat",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 0.5,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "concat",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "concat",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 1.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": true,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+    "runs": 15,
+        "overrides": {
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 0.5,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 1.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 0.5,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "early_channel",
+            "experiment_name": "Incor_Concat",
+            "description": "Volumes sistole/diastole concatenados no canal de intensidade.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    }
+[
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "dual",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 1.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "dual",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "dataset": "incor",
+            "model_mode": "dual",
+            "experiment_name": "Incor_reduzido",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": true,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+    "runs": 15,
+        "overrides": {
+            "model_mode": "dual",
+            "experiment_name": "Incor_dual",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 0.5,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "dual",
+            "experiment_name": "Incor_dual",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": true,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 1.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "dual",
+            "experiment_name": "Incor_dual",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": "rotate",
+                "augmentation_rate": 0.5,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "dual",
+            "experiment_name": "Incor_dual",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": "min_max",
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    },
+    {
+        "runs": 15,
+        "overrides": {
+            "model_mode": "dual",
+            "experiment_name": "Incor_dual",
+            "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+            "preprocessing": {
+                "apply_roi": false,
+                "apply_clahe": false,
+                "normalization": null,
+                "resampling": false,
+                "augmentation": null,
+                "augmentation_rate": 0.0,
+                "save_debug_images": false
+            }
+        }
+    }
+]
+]

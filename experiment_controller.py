@@ -10,7 +10,7 @@ import importlib.util
 from copy import deepcopy
 
 TIMEOUT_SEGUNDOS = 7200  # 120 minutos
-log_file_path = f"log_execucao_run_091126.txt"
+log_file_path = f"logs/log_execucao_run_241126.txt"
 
 # 1. FORÇA O KERAS/TENSORFLOW A ALOCAR VRAM DINAMICAMENTE (NÃO TUDO DE UMA VEZ)
 os.environ["TF_FORCE_GPU_ALLOW_GROWTH"] = "true"
@@ -29,7 +29,7 @@ BASE_EXPERIMENT_CONFIG = {
     "batch_size"                : 8, 
     "predictions_batch_size"    : 4,
     "learning_rate"             : 0.0001,
-    "test_split"                : 0.2,
+    "test_split"                : 0.1,
     "random_seed"               : 416767,
     "training_data_fraction"    : 0.3,
     "early_stopping"            : False, 
@@ -51,7 +51,7 @@ BASE_EXPERIMENT_CONFIG = {
     "weights_filename_auc": "incorMax2_auc.weights.keras"
 }
 
-DEFAULT_PLANS_FILE = os.path.join(os.path.dirname(__file__), "run_config/experiment_plans.json")
+DEFAULT_PLANS_FILE = os.path.join(os.path.dirname(__file__), "run_config/experiment_plans_full.json")
 
 def use_early_stopping(config):
     """Return whether the configured training uses early stopping."""
