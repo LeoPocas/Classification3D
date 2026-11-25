@@ -1,3 +1,4 @@
+import itertools
 import json
 import math
 import os
@@ -13,10 +14,17 @@ import numpy as np
 import pandas as pd
 from utils import LOGS_DIR
 
+# --- CAMINHOS DE SAÍDA: PIPELINE ORIGINAL (COM REFERÊNCIA) ---
 SUMMARY_OUTPUT_PATH = os.path.join(LOGS_DIR, "marginal_efficiency_summary_1.0_v2.csv")
 SENSITIVITY_OUTPUT_PATH = os.path.join(LOGS_DIR, "marginal_efficiency_weight_sensitivity_v2.csv")
 WEIGHT_SENSITIVITY_PLOT_PATH = os.path.join(LOGS_DIR, "marginal_efficiency_weight_sensitivity_v2.png")
 LAMBDA_SENSITIVITY_PLOT_PATH = os.path.join(LOGS_DIR, "marginal_efficiency_lambda_sensitivity_v2.png")
+PHASE_DIAGRAM_PLOT_PATH = os.path.join(LOGS_DIR, "phase_diagram_interaction_v2.png")
+
+# --- CAMINHOS DE SAÍDA: PIPELINE PAR-A-PAR ADITIVA (SEM BASELINE) ---
+PAIRWISE_BY_TECH_CSV = os.path.join(LOGS_DIR, "pairwise_top3_by_technique.csv")
+PAIRWISE_OVERALL_CSV = os.path.join(LOGS_DIR, "pairwise_top3_overall.csv")
+
 SENSITIVITY_TECHNIQUE = "incor_concat_full"
 TRAIN_SUBSET_SUFFIX = "_TrainData_30pct"
 WEIGHT_NAMES = ("w_fn", "w_cross", "w_fp", "lambda_param")
@@ -27,6 +35,9 @@ BASE_WEIGHTS = {
     "w_fp": 1.0,
     "lambda_param": 1.0,
 }
+
+# Lambda base para a formulação aditiva S(A, B) = dB_sym - lambda * log2(T_A / T_B)
+PAIRWISE_BASE_LAMBDA = 0.15
 
 
 @dataclass
@@ -41,6 +52,9 @@ class ModelMetrics:
     cost_seconds: float
 
 
+# ==============================================================================
+# 1. AVALIADOR ORIGINAL: ÍNDICE DE EFICIÊNCIA MARGINAL NORMALIZADA (I_EMN)
+# ==============================================================================
 class MarginalEfficiencyEvaluator:
     """Calcula o Índice de Eficiência Marginal Normalizada (I_EMN) relativo ao modelo mais rápido."""
 
@@ -83,7 +97,6 @@ class MarginalEfficiencyEvaluator:
         if reference.cost_seconds <= 0 or candidate.cost_seconds <= 0:
             raise ValueError("Os custos computacionais devem ser positivos.")
 
-        # Como 'reference' é o grupo mais rápido, cost_ratio >= 1.0 (cost_penalty >= 1.0)
         cost_ratio = max(1.0, candidate.cost_seconds / reference.cost_seconds)
         cost_penalty = 1.0 + self.lambda_param * math.log2(cost_ratio)
 
@@ -98,10 +111,80 @@ class MarginalEfficiencyEvaluator:
         }
 
 
+# ==============================================================================
+# 2. NOVO AVALIADOR: COMPARAÇÃO PAR-A-PAR ADITIVA SIMÉTRICA (SEM BASELINE)
+# ==============================================================================
+class PairwiseAdditiveEvaluator:
+    """
+    Compara dois métodos A e B diretamente sem referência fixa:
+        Delta_B_sym(A, B) = (B(A) - B(B)) / (1 - (B(A) + B(B)) / 2)
+        S(A, B) = Delta_B_sym(A, B) - lambda * log2(T(A) / T(B))
+    """
+
+    def __init__(
+        self,
+        w_fn: float = 2.0,
+        w_cross: float = 1.5,
+        w_fp: float = 1.0,
+        lambda_param: float = PAIRWISE_BASE_LAMBDA,
+    ):
+        self.benefit_helper = MarginalEfficiencyEvaluator(
+            w_fn=w_fn, w_cross=w_cross, w_fp=w_fp, lambda_param=1.0
+        )
+        self.lambda_param = lambda_param
+
+    def compute_delta_b_sym(
+        self, model_a: ModelMetrics, model_b: ModelMetrics
+    ) -> tuple[float, float, float]:
+        b_a = self.benefit_helper.compute_clinical_benefit(model_a)
+        b_b = self.benefit_helper.compute_clinical_benefit(model_b)
+        mean_remaining_margin = 1.0 - ((b_a + b_b) / 2.0)
+
+        if mean_remaining_margin <= 1e-9:
+            delta_b_sym = 0.0
+        else:
+            delta_b_sym = (b_a - b_b) / mean_remaining_margin
+
+        return b_a, b_b, delta_b_sym
+
+    def evaluate_pair(
+        self, model_a: ModelMetrics, model_b: ModelMetrics, label_a: str, label_b: str
+    ) -> Dict[str, object]:
+        if model_a.cost_seconds <= 0 or model_b.cost_seconds <= 0:
+            raise ValueError("Os custos computacionais devem ser positivos.")
+
+        b_a, b_b, delta_b_sym = self.compute_delta_b_sym(model_a, model_b)
+        time_ratio = model_a.cost_seconds / model_b.cost_seconds
+        log2_time_ratio = math.log2(time_ratio)
+        score = delta_b_sym - self.lambda_param * log2_time_ratio
+
+        if abs(score) <= 1e-9:
+            winner = "Empate"
+        elif score > 0:
+            winner = label_a
+        else:
+            winner = label_b
+
+        return {
+            "Model_A": label_a,
+            "Model_B": label_b,
+            "B_A": round(b_a, 5),
+            "B_B": round(b_b, 5),
+            "delta_b_sym": round(delta_b_sym, 5),
+            "T_A_sec": round(model_a.cost_seconds, 5),
+            "T_B_sec": round(model_b.cost_seconds, 5),
+            "time_ratio_A_B": round(time_ratio, 5),
+            "log2_time_ratio": round(log2_time_ratio, 5),
+            "lambda": self.lambda_param,
+            "S_A_B": round(score, 5),
+            "Winner": winner,
+        }
+
+
+# ==============================================================================
+# 3. FUNÇÕES AUXILIARES DE LEITURA E AGREGAÇÃO
+# ==============================================================================
 def _technique_from_group(group_name: str) -> str:
-    """
-    Extrai dataset, técnica, estratégia de treino e regime de dados (ex: _TrainData_30pct).
-    """
     subset_tag = ""
     base_name = group_name
     if group_name.endswith(TRAIN_SUBSET_SUFFIX):
@@ -118,7 +201,6 @@ def _technique_from_group(group_name: str) -> str:
 
 
 def _preprocessing_label(group_name: str, technique: str) -> str:
-    """Extrai o rótulo limpo do pré-processamento, tratando também o sufixo _TrainData_30pct."""
     label = group_name
     if technique.endswith(TRAIN_SUBSET_SUFFIX):
         core_tech = technique[: -len(TRAIN_SUBSET_SUFFIX)]
@@ -138,9 +220,7 @@ def _metrics_from_json(data: dict, name: str) -> Optional[ModelMetrics]:
     if matrix.ndim != 2 or matrix.shape[0] < 3 or matrix.shape[1] < 3:
         return None
 
-    cost_seconds = float(timing.get("load_data_seconds", 0.0)) + float(
-        timing.get("testing_seconds", 0.0)
-    )
+    cost_seconds = float(timing.get("training_seconds", 0.0))
     n_total = float(matrix.sum())
     if cost_seconds <= 0 or n_total <= 0:
         return None
@@ -152,7 +232,6 @@ def _metrics_from_json(data: dict, name: str) -> Optional[ModelMetrics]:
 
 
 def load_metrics_dataframe(logs_dir: str = LOGS_DIR) -> pd.DataFrame:
-    """Carrega todas as execuções válidas dos arquivos JSON."""
     records: List[dict] = []
     if not os.path.isdir(logs_dir):
         print(f"Diretório de logs não encontrado: {logs_dir}")
@@ -182,12 +261,7 @@ def load_metrics_dataframe(logs_dir: str = LOGS_DIR) -> pd.DataFrame:
                     "metrics": metrics,
                 }
             )
-        except (
-            OSError,
-            json.JSONDecodeError,
-            TypeError,
-            ValueError,
-        ) as error:
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as error:
             print(f"Erro ao ler {path}: {error}")
 
     return pd.DataFrame(records)
@@ -208,11 +282,6 @@ def _aggregate_metrics(group_df: pd.DataFrame, name: str) -> ModelMetrics:
 def _select_fastest_reference(
     tech_df: pd.DataFrame,
 ) -> tuple[ModelMetrics, int, list[tuple[str, ModelMetrics, int]]]:
-    """
-    Agrega todos os grupos da técnica e elege o grupo de menor cost_seconds médio
-    como referência computacional. Retorna (referencia, n_runs_ref, todos_os_grupos)
-    para que nenhum grupo (nem Baseline_Raw nem a própria referência) fique de fora.
-    """
     aggregated: list[tuple[str, ModelMetrics, int]] = []
     for group_name, group_df in tech_df.groupby("Group"):
         aggregated.append(
@@ -224,18 +293,20 @@ def _select_fastest_reference(
 
     aggregated.sort(key=lambda item: (item[1].cost_seconds, item[0]))
     _, reference_metrics, ref_runs = aggregated[0]
-    # Retorna TODOS os grupos (incluindo Baseline_Raw e a própria referência)
     return reference_metrics, ref_runs, aggregated
 
 
+# ==============================================================================
+# 4. PIPELINE ORIGINAL: RESUMO I_EMN E ANÁLISES DE SENSIBILIDADE
+# ==============================================================================
 def calculate_marginal_efficiency(
+    df: Optional[pd.DataFrame] = None,
     logs_dir: str = LOGS_DIR,
     output_path: str = SUMMARY_OUTPUT_PATH,
     evaluator: Optional[MarginalEfficiencyEvaluator] = None,
 ) -> pd.DataFrame:
-    """Avalia todos os grupos (incluindo Baseline_Raw) contra o método mais rápido da técnica."""
-    evaluator = evaluator or MarginalEfficiencyEvaluator()
-    df = load_metrics_dataframe(logs_dir)
+    evaluator = evaluator or MarginalEfficiencyEvaluator(**BASE_WEIGHTS)
+    df = df if df is not None else load_metrics_dataframe(logs_dir)
     if df.empty:
         print("Nenhum dado válido extraído.")
         return pd.DataFrame()
@@ -322,12 +393,12 @@ def _evaluate_sensitivity(
 
 
 def calculate_weight_sensitivity(
+    df: Optional[pd.DataFrame] = None,
     technique: str = SENSITIVITY_TECHNIQUE,
     logs_dir: str = LOGS_DIR,
     output_path: str = SENSITIVITY_OUTPUT_PATH,
 ) -> pd.DataFrame:
-    """Calcula o impacto individual dos pesos sobre o I_EMN usando o mais rápido como referência."""
-    df = load_metrics_dataframe(logs_dir)
+    df = df if df is not None else load_metrics_dataframe(logs_dir)
     if df.empty:
         return pd.DataFrame()
 
@@ -343,7 +414,6 @@ def plot_weight_sensitivity(
     sensitivity: pd.DataFrame,
     output_path: str = WEIGHT_SENSITIVITY_PLOT_PATH,
 ) -> None:
-    """Gera quatro curvas, uma para cada peso, mantendo os demais fixos."""
     technique = sensitivity["Technique"].iloc[0]
     ref_label = _preprocessing_label(sensitivity["Reference_Group"].iloc[0], technique)
     groups = sorted(sensitivity["Preprocessing"].unique())
@@ -382,7 +452,6 @@ def plot_lambda_sensitivity(
     sensitivity: pd.DataFrame,
     output_path: str = LAMBDA_SENSITIVITY_PLOT_PATH,
 ) -> None:
-    """Gera o gráfico simples variando lambda com os pesos w fixos."""
     technique = sensitivity["Technique"].iloc[0]
     ref_label = _preprocessing_label(sensitivity["Reference_Group"].iloc[0], technique)
     subset = sensitivity[sensitivity["varied_weight"] == "lambda_param"]
@@ -414,15 +483,12 @@ def plot_lambda_sensitivity(
 
 
 def calculate_2d_interaction(
+    df: Optional[pd.DataFrame] = None,
     technique: str = SENSITIVITY_TECHNIQUE,
     logs_dir: str = LOGS_DIR,
-    output_path: str = os.path.join(LOGS_DIR, "phase_diagram_interaction.png"),
+    output_path: str = PHASE_DIAGRAM_PLOT_PATH,
 ) -> pd.DataFrame:
-    """
-    Avalia a interação simultânea entre Peso Clínico (w_fn / w_fp) e Custo (lambda).
-    Gera um Diagrama de Fases mostrando qual modelo vence em cada região.
-    """
-    df = load_metrics_dataframe(logs_dir)
+    df = df if df is not None else load_metrics_dataframe(logs_dir)
     if df.empty:
         return pd.DataFrame()
 
@@ -486,7 +552,14 @@ def calculate_2d_interaction(
         cmap=cmap,
         alpha=0.85,
     )
-    ax1.scatter([5.0], [1.5], color="black", s=120, marker="*", zorder=5, label="Configuração Base (5.0, 1.5)")
+    ax1.scatter(
+        [BASE_WEIGHTS["w_fn"]],
+        [BASE_WEIGHTS["lambda_param"]],
+        color="black",
+        s=120,
+        marker="*",
+        zorder=5,
+    )
 
     patches = [
         mpatches.Patch(color=colors[remap[idx]], label=candidate_names[idx])
@@ -498,15 +571,15 @@ def calculate_2d_interaction(
             [0],
             marker="*",
             color="w",
-            label="Base (5.0, 1.5)",
+            label=f"Base ({BASE_WEIGHTS['w_fn']}, {BASE_WEIGHTS['lambda_param']})",
             markerfacecolor="black",
             markersize=12,
         )
     )
 
-    ax1.set_title(f"Regiões de Dominância (Ref. mais rápida: {ref_label})")
-    ax1.set_xlabel("Severidade Clínica: Razão $w_{fn} / w_{fp}$")
-    ax1.set_ylabel("Aversão ao Custo Computacional ($\\lambda$)")
+    ax1.set_title(f"Melhores modelos e seus domínios (Ref. mais rápida: {ref_label})")
+    ax1.set_xlabel("Razão $w_{fn} / w_{fp}$")
+    ax1.set_ylabel("Valor $\\lambda$ (aversão ao tempo de treinamento)")
     ax1.legend(handles=patches, loc="upper right", fontsize=8.5, framealpha=0.92)
     ax1.grid(alpha=0.2, linestyle="--")
 
@@ -517,13 +590,21 @@ def calculate_2d_interaction(
         extent=[w_fn_values.min(), w_fn_values.max(), lambda_values.min(), lambda_values.max()],
         cmap="viridis",
     )
-    ax2.scatter([5.0], [1.5], color="white", edgecolor="black", s=120, marker="*", zorder=5)
+    ax2.scatter(
+        [BASE_WEIGHTS["w_fn"]],
+        [BASE_WEIGHTS["lambda_param"]],
+        color="white",
+        edgecolor="black",
+        s=120,
+        marker="*",
+        zorder=5,
+    )
     cbar = fig.colorbar(im2, ax=ax2)
     cbar.set_label("Diferença de $I_{EMN}$ (1º vs. 2º colocado)")
 
     ax2.set_title("Margem de Vitória (Robustez da Liderança)")
-    ax2.set_xlabel("Severidade Clínica: Razão $w_{fn} / w_{fp}$")
-    ax2.set_ylabel("Aversão ao Custo Computacional ($\\lambda$)")
+    ax2.set_xlabel("Razão $w_{fn} / w_{fp}$")
+    ax2.set_ylabel("Valor $\\lambda$ (aversão ao tempo de treinamento)")
     ax2.grid(alpha=0.2, linestyle="--")
 
     fig.suptitle(
@@ -539,14 +620,200 @@ def calculate_2d_interaction(
     return pd.DataFrame(records)
 
 
+# ==============================================================================
+# 5. PIPELINE PAR-A-PAR ADITIVA: DUELOS ENTRE OS TOP 3 DO SUMMARY
+# ==============================================================================
+def run_pairwise_top3(
+    top_groups: List[tuple[str, str, float]],
+    metrics_map: Dict[str, ModelMetrics],
+    scope_name: str,
+    base_lambda: float = PAIRWISE_BASE_LAMBDA,
+) -> pd.DataFrame:
+    """Executa todas as comparações par-a-par S(A, B) entre os Top 3."""
+    clinical_weights = {k: BASE_WEIGHTS[k] for k in ("w_fn", "w_cross", "w_fp")}
+    evaluator = PairwiseAdditiveEvaluator(**clinical_weights, lambda_param=base_lambda)
+    rows: List[dict] = []
+
+    for (grp_a, lbl_a, i_a), (grp_b, lbl_b, i_b) in itertools.permutations(top_groups, 2):
+        res = evaluator.evaluate_pair(
+            metrics_map[grp_a], metrics_map[grp_b], lbl_a, lbl_b
+        )
+        rows.append(
+            {
+                "Scope": scope_name,
+                "Group_A": grp_a,
+                "Group_B": grp_b,
+                "I_EMN_prev_A": i_a,
+                "I_EMN_prev_B": i_b,
+                **res,
+            }
+        )
+
+    return pd.DataFrame(rows)
+
+
+def plot_pairwise_analysis(
+    top_groups: List[tuple[str, str, float]],
+    metrics_map: Dict[str, ModelMetrics],
+    scope_name: str,
+    output_path: str,
+    base_lambda: float = PAIRWISE_BASE_LAMBDA,
+) -> None:
+    """Gera a matriz de duelos 3x3 e a curva de inversão S(A, B) x lambda."""
+    clinical_weights = {k: BASE_WEIGHTS[k] for k in ("w_fn", "w_cross", "w_fp")}
+    n = len(top_groups)
+    labels = [f"#{idx+1} {lbl}" for idx, (_, lbl, _) in enumerate(top_groups)]
+    matrix = np.zeros((n, n), dtype=float)
+
+    base_eval = PairwiseAdditiveEvaluator(**clinical_weights, lambda_param=base_lambda)
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                matrix[i, j] = 0.0
+            else:
+                res = base_eval.evaluate_pair(
+                    metrics_map[top_groups[i][0]],
+                    metrics_map[top_groups[j][0]],
+                    labels[i],
+                    labels[j],
+                )
+                matrix[i, j] = res["S_A_B"]
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+
+    # Subplot 1: Matriz de Duelos 3x3
+    max_abs = max(0.05, float(np.max(np.abs(matrix))))
+    im = ax1.imshow(matrix, cmap="RdBu", vmin=-max_abs, vmax=max_abs)
+    ax1.set_xticks(range(n))
+    ax1.set_yticks(range(n))
+    ax1.set_xticklabels(labels, rotation=20, ha="right", fontsize=9)
+    ax1.set_yticklabels(labels, fontsize=9)
+
+    for i in range(n):
+        for j in range(n):
+            val = matrix[i, j]
+            text_color = "white" if abs(val) > 0.55 * max_abs else "black"
+            txt = "0.000" if i == j else f"{val:+.4f}"
+            ax1.text(j, i, txt, ha="center", va="center", color=text_color, fontweight="bold")
+
+    cbar = fig.colorbar(im, ax=ax1, fraction=0.046, pad=0.04)
+    cbar.set_label("$S(A, B)$  [> 0: Linha A vence Coluna B]")
+    ax1.set_title(f"Matriz de comparação para ($\\lambda = {base_lambda}$)")
+
+    # Subplot 2: Evolução de S(A, B) com lambda
+    lambdas = np.linspace(0.0, 0.5, 50)
+    for (idx_a, (grp_a, lbl_a, _)), (idx_b, (grp_b, lbl_b, _)) in itertools.combinations(
+        enumerate(top_groups), 2
+    ):
+        scores = []
+        for lam in lambdas:
+            ev = PairwiseAdditiveEvaluator(**clinical_weights, lambda_param=float(lam))
+            res = ev.evaluate_pair(metrics_map[grp_a], metrics_map[grp_b], lbl_a, lbl_b)
+            scores.append(res["S_A_B"])
+        ax2.plot(
+            lambdas,
+            scores,
+            linewidth=2.0,
+            label=f"#{idx_a+1} {lbl_a}  vs.  #{idx_b+1} {lbl_b}",
+        )
+
+    ax2.axhline(0.0, color="black", linestyle="--", linewidth=1.1, label="Empate técnico ($S = 0$)")
+    ax2.axvline(base_lambda, color="gray", linestyle=":", linewidth=1.1, label=f"$\\lambda$ base ({base_lambda})")
+    ax2.set_title("Ponto de Inversão entre os Top 3")
+    ax2.set_xlabel("Penalidade de Tempo ($\\lambda$)")
+    ax2.set_ylabel("$S(A, B)$  [> 0: A vence | < 0: B vence]")
+    ax2.grid(alpha=0.25)
+    ax2.legend(fontsize=8.5, loc="best")
+
+    fig.suptitle(
+        f"Comparação Par-a-Par sem Baseline (Top 3 I_EMN) — {scope_name}",
+        fontsize=13,
+        fontweight="bold",
+    )
+    fig.tight_layout()
+    fig.savefig(output_path, dpi=180)
+    plt.close(fig)
+    print(f"Gráfico par-a-par salvo em: {output_path}")
+
+
 if __name__ == "__main__":
-    result = calculate_marginal_efficiency()
+    raw_df = load_metrics_dataframe()
+    if raw_df.empty:
+        raise SystemExit("Nenhum dado válido encontrado.")
+
+    # --- PARTE 1: EXECUÇÃO DA FÓRMULA ANTIGA (COM REFERÊNCIA) ---
+    result = calculate_marginal_efficiency(df=raw_df)
     if result.empty:
         raise SystemExit("Nenhuma comparação válida encontrada.")
     print(result.to_string(index=False))
-    sensitivity = calculate_weight_sensitivity()
+
+    sensitivity = calculate_weight_sensitivity(df=raw_df)
     if sensitivity.empty:
         raise SystemExit("Nenhum dado válido para análise de sensibilidade.")
     plot_weight_sensitivity(sensitivity)
     plot_lambda_sensitivity(sensitivity)
-    calculate_2d_interaction()
+    calculate_2d_interaction(df=raw_df)
+
+    # --- PARTE 2: EXECUÇÃO DA NOVA FÓRMULA PAR-A-PAR (TOP 3 DO RESULTADO ANTERIOR) ---
+    metrics_map = {
+        group_name: _aggregate_metrics(group_df, group_name)
+        for group_name, group_df in raw_df.groupby("Group")
+    }
+
+    # 2A. Top 3 dentro de cada técnica
+    by_tech_dfs: List[pd.DataFrame] = []
+    for technique, tech_sub in result.groupby("Technique"):
+        top3_tech = tech_sub.sort_values("i_emn", ascending=False).head(3)
+        if len(top3_tech) < 2:
+            continue
+
+        top_groups_tech = [
+            (
+                row.Group,
+                _preprocessing_label(row.Group, technique),
+                round(float(row.i_emn), 5),
+            )
+            for row in top3_tech.itertuples()
+            if row.Group in metrics_map
+        ]
+
+        df_duels = run_pairwise_top3(top_groups_tech, metrics_map, scope_name=technique)
+        by_tech_dfs.append(df_duels)
+
+        plot_path = os.path.join(LOGS_DIR, f"pairwise_top3_{technique}.png")
+        plot_pairwise_analysis(top_groups_tech, metrics_map, technique, plot_path)
+
+    if by_tech_dfs:
+        all_tech_duels = pd.concat(by_tech_dfs, ignore_index=True)
+        all_tech_duels.to_csv(PAIRWISE_BY_TECH_CSV, index=False)
+        print(f"\nDuelos Top 3 por técnica salvos em: {PAIRWISE_BY_TECH_CSV}")
+        print(
+            all_tech_duels[
+                ["Scope", "Model_A", "Model_B", "delta_b_sym", "log2_time_ratio", "S_A_B", "Winner"]
+            ].to_string(index=False)
+        )
+
+    # 2B. Top 3 globais (considerando todas as técnicas juntas)
+    top3_overall = result.sort_values("i_emn", ascending=False).head(3)
+    top_groups_overall = [
+        (row.Group, row.Group, round(float(row.i_emn), 5))
+        for row in top3_overall.itertuples()
+        if row.Group in metrics_map
+    ]
+    if len(top_groups_overall) >= 2:
+        overall_duels = run_pairwise_top3(
+            top_groups_overall, metrics_map, scope_name="OVERALL_TOP3"
+        )
+        overall_duels.to_csv(PAIRWISE_OVERALL_CSV, index=False)
+        plot_pairwise_analysis(
+            top_groups_overall,
+            metrics_map,
+            "OVERALL_TOP3",
+            os.path.join(LOGS_DIR, "pairwise_top3_OVERALL.png"),
+        )
+        print(f"\nDuelos Top 3 GERAIS salvos em: {PAIRWISE_OVERALL_CSV}")
+        print(
+            overall_duels[
+                ["Model_A", "Model_B", "delta_b_sym", "log2_time_ratio", "S_A_B", "Winner"]
+            ].to_string(index=False)
+        )
