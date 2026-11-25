@@ -1,0 +1,99 @@
+{
+    "timestamp": "2026-11-25_01-27-56",
+    "duration": "0:18:25",
+    "group": "incor/dual/incor_dual_earlyStop_Aug_rotate_100pct_TrainData_30pct",
+    "config": {
+        "dataset": "incor",
+        "model_mode": "dual",
+        "experiment_name": "Incor_reduzido",
+        "description": "Volumes sistole/diastole dualenados no eixo espacial.",
+        "epochs": 300,
+        "batch_size": 8,
+        "predictions_batch_size": 4,
+        "learning_rate": 0.0001,
+        "test_split": 0.1,
+        "random_seed": 416767,
+        "training_data_fraction": 0.3,
+        "early_stopping": true,
+        "preprocessing": {
+            "apply_roi": false,
+            "apply_clahe": false,
+            "normalization": null,
+            "resampling": false,
+            "augmentation": "rotate",
+            "augmentation_rate": 1.0,
+            "save_debug_images": false
+        },
+        "save_weights": true,
+        "weights_filename_loss": "incorMax2_loss.weights_plan_1_run_8.keras",
+        "weights_filename_auc": "incorMax2_auc.weights_plan_1_run_8.keras"
+    },
+    "results": {
+        "timing": {
+            "load_data_seconds": 11.119747161865234,
+            "training_seconds": 1083.600263595581,
+            "testing_seconds": 9.20288896560669
+        },
+        "final_train_loss": 0.0205793846398592,
+        "final_train_accuracy": 0.9873417615890503,
+        "final_val_loss": 0.12917523086071014,
+        "final_val_accuracy": 0.9444444179534912,
+        "test_results_raw": [
+            1.2795569896697998,
+            0.7666666507720947,
+            0.900092601776123
+        ],
+        "test_accuracy": 0.7666666507720947,
+        "test_auc": 0.900092601776123,
+        "confusion_matrix": [
+            [
+                23,
+                1,
+                6
+            ],
+            [
+                1,
+                24,
+                5
+            ],
+            [
+                0,
+                8,
+                22
+            ]
+        ],
+        "classification_report": {
+            "NOR": {
+                "precision": 0.9583333333333334,
+                "recall": 0.7666666666666667,
+                "f1-score": 0.8518518518518519,
+                "support": 30.0
+            },
+            "DCM": {
+                "precision": 0.7272727272727273,
+                "recall": 0.8,
+                "f1-score": 0.7619047619047619,
+                "support": 30.0
+            },
+            "HCM": {
+                "precision": 0.6666666666666666,
+                "recall": 0.7333333333333333,
+                "f1-score": 0.6984126984126984,
+                "support": 30.0
+            },
+            "accuracy": 0.7666666666666667,
+            "macro avg": {
+                "precision": 0.7840909090909091,
+                "recall": 0.7666666666666667,
+                "f1-score": 0.7707231040564374,
+                "support": 90.0
+            },
+            "weighted avg": {
+                "precision": 0.7840909090909091,
+                "recall": 0.7666666666666667,
+                "f1-score": 0.7707231040564374,
+                "support": 90.0
+            }
+        }
+    }
+}
