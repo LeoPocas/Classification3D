@@ -4,8 +4,8 @@ __pycache__/
 *$py.class
 *.keras
 *.h5
-*.png
-*.jpg
+# *.png
+# *.jpg
 *.zip
 ACDC/ 
 log_*
